@@ -61,7 +61,7 @@ Once configured, run the deployment script:
 ```bash
 make deploy
 # or
-./script/select_blocks.sh
+./script/auto_deploy.sh
 ```
 
 The script will:
@@ -139,7 +139,7 @@ solana-keygen new
 
 Make sure scripts are executable:
 ```bash
-chmod +x setup.sh select_blocks.sh
+chmod +x setup.sh auto_deploy.sh
 ```
 
 ### Build Failures

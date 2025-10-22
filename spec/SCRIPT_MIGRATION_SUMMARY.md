@@ -12,7 +12,7 @@ All shell scripts have been reorganized into the `/script` directory for better 
 ```
 ore/
 ├── setup.sh
-├── select_blocks.sh
+├── auto_deploy.sh
 └── localnet.sh
 ```
 
@@ -22,7 +22,7 @@ ore/
 └── script/
     ├── generate_keypair.sh  (NEW)
     ├── localnet.sh
-    ├── select_blocks.sh
+    ├── auto_deploy.sh
     └── setup.sh
 ```
 
@@ -58,7 +58,7 @@ generate-keypair:
 
 **Updated Targets**:
 - `setup` → now calls `./script/setup.sh`
-- `deploy` → now calls `./script/select_blocks.sh`
+- `deploy` → now calls `./script/auto_deploy.sh`
 
 **New Help Section**:
 ```
@@ -83,12 +83,12 @@ Wallet Management:
 - ✅ .gitignore
 - ✅ rust-toolchain.toml
 - ❌ ~~setup.sh~~ → moved to `/script`
-- ❌ ~~select_blocks.sh~~ → moved to `/script`
+- ❌ ~~auto_deploy.sh~~ → moved to `/script`
 - ❌ ~~localnet.sh~~ → moved to `/script`
 
 ### 5. Internal Script References Updated
 
-**`script/select_blocks.sh`** now uses:
+**`script/auto_deploy.sh`** now uses:
 ```bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 "$SCRIPT_DIR/setup.sh"
@@ -162,7 +162,7 @@ ore/
 ├── script/          ← ALL shell scripts here
 │   ├── generate_keypair.sh
 │   ├── localnet.sh
-│   ├── select_blocks.sh
+│   ├── auto_deploy.sh
 │   └── setup.sh
 ├── spec/            ← ALL documentation here  
 │   └── *.md
@@ -196,7 +196,7 @@ make setup
 make deploy
 
 # Direct execution
-./script/select_blocks.sh
+./script/auto_deploy.sh
 ```
 
 ## Testing
@@ -213,7 +213,7 @@ Verified that:
 
 1. **Moved** (3 files):
    - `setup.sh` → `script/setup.sh`
-   - `select_blocks.sh` → `script/select_blocks.sh`
+   - `auto_deploy.sh` → `script/auto_deploy.sh`
    - `localnet.sh` → `script/localnet.sh`
 
 2. **Created** (1 file):
@@ -224,7 +224,7 @@ Verified that:
    - `.cursor/rules/base.mdc`
    - `spec/QUICKSTART.md`
    - `spec/SCRIPTS_README.md`
-   - `script/select_blocks.sh` (internal references)
+   - `script/auto_deploy.sh` (internal references)
 
 4. **Created** (1 doc):
    - `spec/SCRIPT_MIGRATION_SUMMARY.md` (this file)

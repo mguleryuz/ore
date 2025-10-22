@@ -47,6 +47,9 @@ async fn main() {
         "board" => {
             log_board(&rpc).await.unwrap();
         }
+        "available_blocks" => {
+            get_available_blocks_json(&rpc).await.unwrap();
+        }
         "config" => {
             log_config(&rpc).await.unwrap();
         }
@@ -606,6 +609,33 @@ async fn log_board(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let board = get_board(&rpc).await?;
     let clock = get_clock(&rpc).await?;
     print_board(board, &clock);
+    Ok(())
+}
+
+async fn get_available_blocks_json(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    // Get board and round
+    let board = get_board(&rpc).await?;
+    let round = get_round(&rpc, board.round_id).await?;
+    
+    // Get threshold from environment or default to 1 SOL
+    let threshold_sol = std::env::var("THRESHOLD_SOL")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1.0);
+    
+    let threshold_lamports = (threshold_sol * LAMPORTS_PER_SOL as f64) as u64;
+    
+    // Find available blocks (where deployed amount is below threshold)
+    let mut available_blocks = Vec::new();
+    for (i, &deployed) in round.deployed.iter().enumerate() {
+        if deployed < threshold_lamports {
+            available_blocks.push(i);
+        }
+    }
+    
+    // Output as simple JSON array for easy parsing in bash
+    println!("{}", available_blocks.iter().map(|b| b.to_string()).collect::<Vec<_>>().join(" "));
+    
     Ok(())
 }
 

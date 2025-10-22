@@ -65,7 +65,7 @@ ore/
 ├── README.md            # Main project documentation
 ├── localnet.sh          # Local network setup
 ├── rust-toolchain.toml  # Rust toolchain spec
-├── select_blocks.sh     # Block deployment automation
+├── auto_deploy.sh     # Block deployment automation
 └── setup.sh             # Dependency setup script
 ```
 
@@ -285,7 +285,7 @@ make check-deps    # Verify setup
 As of 2025-10-22:
 
 - **Documentation files**: 4 (in `/spec`)
-- **Root scripts**: 2 (setup.sh, select_blocks.sh)
+- **Root scripts**: 2 (setup.sh, auto_deploy.sh)
 - **Source directories**: 3 (api, cli, program)
 - **Configuration files**: 6
 

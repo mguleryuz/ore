@@ -1,9 +1,9 @@
-# End-to-End Flow Analysis: select_blocks.sh → deploy
+# End-to-End Flow Analysis: auto_deploy.sh → deploy
 
 ## Current Flow
 
 ```
-select_blocks.sh
+auto_deploy.sh
   ↓
   Load .env config
   ↓
@@ -135,7 +135,7 @@ for (i, &square) in squares.iter().enumerate() {
 
 ### Immediate Improvements
 
-Add to `select_blocks.sh`:
+Add to `auto_deploy.sh`:
 
 ```bash
 # Pre-flight checks

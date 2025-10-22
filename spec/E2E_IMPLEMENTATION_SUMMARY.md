@@ -194,7 +194,7 @@ cargo test test_amount_encoding -- --nocapture
 - ✅ Verify encoding and instruction building
 - ✅ Tests run quickly (< 5 seconds)
 - ✅ Clear output with descriptions
-- ✅ Matches `select_blocks.sh` behavior
+- ✅ Matches `auto_deploy.sh` behavior
 
 ## 📖 Documentation
 

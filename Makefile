@@ -30,7 +30,7 @@ help:
 	@echo "  make test           - Run unit tests"
 	@echo ""
 	@echo "Deployment:"
-	@echo "  make deploy         - Deploy to selected blocks (main script)"
+	@echo "  make deploy         - Auto-deploy to randomly selected available blocks"
 	@echo ""
 	@echo "Query Commands:"
 	@echo "  make board          - Show current board state"
@@ -67,11 +67,11 @@ setup:
 	@chmod +x script/setup.sh
 	@./script/setup.sh
 
-# Deploy to selected blocks
+# Auto-deploy to randomly selected blocks
 deploy: ensure-setup
-	@echo "🚀 Deploying to selected blocks..."
-	@chmod +x script/select_blocks.sh
-	@./script/select_blocks.sh
+	@echo "🚀 Auto-deploying to randomly selected blocks..."
+	@chmod +x script/auto_deploy.sh
+	@./script/auto_deploy.sh
 
 # Build the project
 build:

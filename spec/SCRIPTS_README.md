@@ -7,7 +7,7 @@ This directory contains automated scripts and tools for ORE mining block deploym
 | File | Purpose |
 |------|---------|
 | `script/setup.sh` | Dependency installation and environment setup |
-| `script/select_blocks.sh` | Block selection and deployment automation |
+| `script/auto_deploy.sh` | Block selection and deployment automation |
 | `script/generate_keypair.sh` | Secure keypair generation (no history) |
 | `.env.example` | Configuration template |
 | `Makefile` | Easy command shortcuts (recommended) |
@@ -75,8 +75,8 @@ nano .env  # Edit with your settings
 ```bash
 make deploy
 # or
-chmod +x script/select_blocks.sh
-./script/select_blocks.sh
+chmod +x script/auto_deploy.sh
+./script/auto_deploy.sh
 ```
 
 ## ⚙️ Configuration (.env)
@@ -163,7 +163,7 @@ The board has 25 squares (0-24) in a 5x5 grid:
 ✅ Never overwrites existing `.env`  
 ✅ Safe to run multiple times  
 
-### Automated Deployment (`select_blocks.sh`)
+### Automated Deployment (`auto_deploy.sh`)
 ✅ Auto-runs setup if needed  
 ✅ Validates block numbers (0-24)  
 ✅ Converts SOL to lamports automatically  
@@ -253,7 +253,7 @@ make build
 
 ### Permission Errors
 ```bash
-chmod +x setup.sh select_blocks.sh
+chmod +x setup.sh auto_deploy.sh
 ```
 
 ## 📊 Environment Variables

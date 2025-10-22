@@ -337,7 +337,7 @@ setup_env_file() {
             print_warning ".env file not found. Creating from .env.example..."
             cp .env.example .env
             print_success ".env file created"
-            print_warning "⚠️  Please edit .env with your actual configuration before running select_blocks.sh"
+            print_warning "⚠️  Please edit .env with your actual configuration before running auto_deploy.sh"
             ENV_NEEDS_CONFIG=true
         else
             print_error ".env.example not found. Cannot create .env file."
