@@ -22,7 +22,7 @@ test/
 ├── src/
 │   ├── lib.rs          # Library exports
 │   └── helpers.rs      # Helper functions and utilities
-└── tests/
+└── e2e/
     └── deploy_e2e.rs   # E2E test suite
 ```
 

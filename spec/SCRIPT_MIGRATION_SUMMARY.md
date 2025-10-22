@@ -167,7 +167,7 @@ ore/
 ├── spec/            ← ALL documentation here  
 │   └── *.md
 └── test/            ← ALL tests here
-    └── tests/
+    └── e2e/
 ```
 
 ## Usage Examples

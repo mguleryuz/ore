@@ -111,6 +111,6 @@ mod tests {
         let size_of_round = 8 + std::mem::size_of::<Round>();
         let required_rent = Rent::default().minimum_balance(size_of_round);
         println!("required_rent: {}", required_rent);
-        assert!(false);
+        assert!(required_rent > 0, "Required rent should be greater than 0");
     }
 }

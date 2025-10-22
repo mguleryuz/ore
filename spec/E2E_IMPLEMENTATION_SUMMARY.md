@@ -14,7 +14,7 @@ test/
 ├── src/
 │   ├── lib.rs             (✅ 8 lines)
 │   └── helpers.rs         (✅ 198 lines)
-└── tests/
+└── e2e/
     └── deploy_e2e.rs      (✅ 310 lines)
 ```
 

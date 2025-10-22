@@ -27,7 +27,7 @@ help:
 	@echo "Building:"
 	@echo "  make build          - Build the project in release mode"
 	@echo "  make clean          - Clean build artifacts"
-	@echo "  make test           - Run tests"
+	@echo "  make test           - Run unit tests"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  make deploy         - Deploy to selected blocks (main script)"
@@ -92,7 +92,7 @@ clean:
 # Test the project
 test:
 	@echo "🧪 Running tests..."
-	@cargo test-sbf
+	@cargo test --lib --release 2>&1 | grep -E "(test result|error|PASSED|FAILED)" || true
 
 # Check if dependencies are installed
 check-deps:

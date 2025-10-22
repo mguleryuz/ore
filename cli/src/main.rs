@@ -12,7 +12,7 @@ use solana_client::{
 };
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
-    native_token::lamports_to_sol,
+    native_token::LAMPORTS_PER_SOL,
     pubkey,
     pubkey::Pubkey,
     signature::{read_keypair_file, Signer},
@@ -473,7 +473,7 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury = get_treasury(rpc).await?;
     println!("Treasury");
     println!("  address: {}", treasury_address);
-    println!("  balance: {} SOL", lamports_to_sol(treasury.balance));
+    println!("  balance: {} SOL", treasury.balance as f64 / LAMPORTS_PER_SOL as f64);
     println!(
         "  motherlode: {} ORE",
         amount_to_ui_amount(treasury.motherlode, TOKEN_DECIMALS)
@@ -543,7 +543,7 @@ async fn log_miner(
     println!("  authority: {}", authority);
     println!("  deployed: {:?}", miner.deployed);
     println!("  cumulative: {:?}", miner.cumulative);
-    println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
+    println!("  rewards_sol: {} SOL", miner.rewards_sol as f64 / LAMPORTS_PER_SOL as f64);
     println!(
         "  rewards_ore: {} ORE",
         amount_to_ui_amount(miner.rewards_ore, TOKEN_DECIMALS)
@@ -556,7 +556,7 @@ async fn log_miner(
     println!("  checkpoint_id: {}", miner.checkpoint_id);
     println!(
         "  lifetime_rewards_sol: {} SOL",
-        lamports_to_sol(miner.lifetime_rewards_sol)
+        miner.lifetime_rewards_sol as f64 / LAMPORTS_PER_SOL as f64
     );
     println!(
         "  lifetime_rewards_ore: {} ORE",
