@@ -45,7 +45,7 @@ make deploy         # Run block selection script
 
 | Command | Description |
 |---------|-------------|
-| `make deploy` | Deploy to selected blocks (uses `.env` config) |
+| `make deploy` | Auto-deploy to randomly selected available blocks |
 
 ### Query Commands
 
@@ -215,10 +215,11 @@ make build
 All commands that interact with the blockchain use the `.env` file for configuration:
 
 ```bash
-PRIVATE_KEY_PATH=/path/to/keypair.json
+PRIVATE_KEY_PATH=./tmp/keypair.json
 RPC_URL=https://api.mainnet-beta.solana.com
-BET_AMOUNT=0.1
-BLOCKS=5,10,15,20
+BET_AMOUNT=0.01
+BLOCKS_QUANTITY=3
+DEPLOYMENT_DELAY=1
 ```
 
 ## 🔍 Troubleshooting
@@ -282,7 +283,8 @@ make build
 
 3. **Environment Variables**: Override `.env` values temporarily:
    ```bash
-   BLOCKS=0,1,2 make deploy
+   BLOCKS_QUANTITY=10 make deploy
+   BET_AMOUNT=0.05 make deploy
    ```
 
 4. **Silent Mode**: Add `-s` flag to suppress make output:

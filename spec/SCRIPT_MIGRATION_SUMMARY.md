@@ -58,14 +58,19 @@ generate-keypair:
 
 **Updated Targets**:
 - `setup` → now calls `./script/setup.sh`
-- `deploy` → now calls `./script/auto_deploy.sh`
+- `deploy` → now calls `./script/auto_deploy.sh` (auto-selects random available blocks)
 
-**New Help Section**:
+**New Help Sections**:
 ```
 Wallet Management:
   make generate-keypair - Generate new keypair (secure)
-  make balance        - Show wallet balance
-  make address        - Show wallet address
+  make balance         - Show wallet balance
+  make address         - Show wallet address
+
+E2E Testing:
+  make test-e2e        - Run E2E integration tests
+  make test-e2e-verbose - Run E2E tests with output
+  make test-e2e-mainnet - Query mainnet for testing
 ```
 
 ### 4. Documentation Updated

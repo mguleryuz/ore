@@ -6,10 +6,6 @@ This document describes the clean, organized directory structure of the ORE mini
 
 ```
 ore/
-├── .cursor/              # Cursor IDE configuration
-│   └── rules/            # AI assistant rules and guidelines
-│       └── base.mdc      # Base project structure rules
-│
 ├── api/                  # ORE API and SDK
 │   ├── Cargo.toml
 │   └── src/
@@ -20,6 +16,15 @@ ore/
 │       ├── lib.rs
 │       ├── sdk.rs
 │       └── state/        # State management
+│           ├── automation.rs
+│           ├── board.rs
+│           ├── config.rs
+│           ├── miner.rs
+│           ├── mod.rs
+│           ├── round.rs
+│           ├── seeker.rs
+│           ├── stake.rs
+│           └── treasury.rs
 │
 ├── cli/                  # Command-line interface
 │   ├── Cargo.toml
@@ -50,23 +55,37 @@ ore/
 │       ├── withdraw.rs
 │       └── wrap.rs
 │
+├── script/               # Shell scripts and utilities
+│   ├── auto_deploy.sh    # Auto block selection & deployment
+│   ├── generate_keypair.sh # Secure keypair generation
+│   ├── localnet.sh       # Local network setup
+│   └── setup.sh          # Dependency setup
+│
 ├── spec/                 # Documentation & specifications
 │   ├── DIRECTORY_STRUCTURE.md (this file)
+│   ├── E2E_FLOW_ANALYSIS.md
+│   ├── E2E_IMPLEMENTATION_SUMMARY.md
+│   ├── E2E_TESTING.md
 │   ├── MAKEFILE_REFERENCE.md
 │   ├── QUICKSTART.md
-│   └── SCRIPTS_README.md
+│   ├── SCRIPTS_README.md
+│   └── SCRIPT_MIGRATION_SUMMARY.md
 │
-├── .cursorignore        # Cursor ignore patterns
-├── .env.example         # Environment variables template
-├── .gitignore           # Git ignore rules
-├── Cargo.lock           # Dependency lock file
-├── Cargo.toml           # Workspace configuration
-├── Makefile             # Build & deployment automation
-├── README.md            # Main project documentation
-├── localnet.sh          # Local network setup
-├── rust-toolchain.toml  # Rust toolchain spec
-├── auto_deploy.sh     # Block deployment automation
-└── setup.sh             # Dependency setup script
+├── test/                 # E2E integration tests
+│   ├── Cargo.toml
+│   ├── e2e/
+│   │   └── deploy_e2e.rs
+│   └── src/
+│       ├── helpers.rs
+│       └── lib.rs
+│
+├── .env.example          # Environment variables template
+├── .gitignore            # Git ignore rules
+├── Cargo.lock            # Dependency lock file
+├── Cargo.toml            # Workspace configuration
+├── Makefile              # Build & deployment automation
+├── README.md             # Main project documentation
+└── rust-toolchain.toml   # Rust toolchain spec
 ```
 
 ## 📂 Directory Purposes
@@ -102,6 +121,16 @@ ore/
 - State transitions
 - Validation and security
 
+### `/script`
+
+**Purpose**: Shell scripts and utilities
+
+- Automated deployment scripts
+- Setup and installation scripts
+- Keypair generation tools
+- Local network management
+- All executable shell scripts
+
 ### `/spec`
 
 **Purpose**: Documentation and specifications
@@ -111,16 +140,17 @@ ore/
 - Workflow examples
 - Command reference
 - Architecture specifications
+- E2E testing documentation
 - This directory structure guide
 
-### `/.cursor/rules`
+### `/test`
 
-**Purpose**: AI assistant configuration
+**Purpose**: E2E integration tests
 
-- Project structure rules
-- Coding conventions
-- File organization standards
-- Enforced by Cursor AI
+- End-to-end deployment tests
+- Mainnet state forking tests
+- Helper utilities and test fixtures
+- Integration test scenarios
 
 ## 🎯 Design Principles
 
@@ -167,16 +197,15 @@ All documentation markdown files (except README.md) live in `/spec`:
 ✅ Makefile - Build automation  
 ✅ .env.example - Config template  
 ✅ .gitignore - Git rules  
-✅ \*.sh - Setup/deployment scripts  
 ✅ rust-toolchain.toml - Toolchain spec
 
 ### Root Level Files (NOT Allowed)
 
 ❌ Additional \*.md files → use `/spec` instead  
-❌ Test files → use appropriate test directories  
+❌ Shell scripts → use `/script` directory  
+❌ Test files → use `/test` directory  
 ❌ Build artifacts → gitignored in `/target`  
-❌ Temporary files → should be gitignored  
-❌ Helper scripts (if many) → consider `/scripts` dir
+❌ Temporary files → use `/tmp` (gitignored)
 
 ### Documentation Files
 
@@ -218,12 +247,12 @@ touch NEW_FEATURE_GUIDE.md  # at root
 **Script?**
 
 ```bash
-# ✅ Correct (if few scripts)
-touch new-utility.sh
+# ✅ Correct
+touch script/new-utility.sh
+chmod +x script/new-utility.sh
 
-# ✅ Better (if many scripts)
-mkdir -p scripts
-touch scripts/new-utility.sh
+# ❌ Wrong
+touch new-utility.sh  # at root
 ```
 
 **Code?**
@@ -266,7 +295,10 @@ ls program/src/
 ls cli/src/
 
 # Scripts
-ls *.sh
+ls script/
+
+# Tests
+ls test/
 
 # Config
 ls .env* Cargo.toml Makefile
@@ -284,10 +316,10 @@ make check-deps    # Verify setup
 
 As of 2025-10-22:
 
-- **Documentation files**: 4 (in `/spec`)
-- **Root scripts**: 2 (setup.sh, auto_deploy.sh)
-- **Source directories**: 3 (api, cli, program)
-- **Configuration files**: 6
+- **Documentation files**: 8 (in `/spec`)
+- **Script files**: 4 (in `/script`)
+- **Source directories**: 4 (api, cli, program, test)
+- **Configuration files**: 5 (at root)
 
 ## 🚀 Benefits
 
@@ -317,7 +349,7 @@ As of 2025-10-22:
 - [Quick Start Guide](QUICKSTART.md) - Get started quickly
 - [Makefile Reference](MAKEFILE_REFERENCE.md) - All make commands
 - [Scripts Documentation](SCRIPTS_README.md) - Automation scripts
-- [Base Rules](.cursor/rules/base.mdc) - Structure enforcement
+- [E2E Testing Guide](E2E_TESTING.md) - Integration testing
 
 ---
 

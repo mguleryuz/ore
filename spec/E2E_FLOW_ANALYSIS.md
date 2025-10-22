@@ -1,15 +1,23 @@
 # End-to-End Flow Analysis: auto_deploy.sh → deploy
 
-## Current Flow
+> **Note**: This document describes the technical flow of the deploy instruction. The deployment script has been updated to automatically fetch and randomly select available blocks. See [QUICKSTART.md](QUICKSTART.md) for current usage.
+
+## Technical Flow (Deploy Instruction)
 
 ```
 auto_deploy.sh
   ↓
-  Load .env config
+  Load .env config (BLOCKS_QUANTITY, BET_AMOUNT, etc.)
   ↓
-  For each BLOCK in BLOCKS:
+  Fetch available blocks from mainnet
+  ↓
+  Randomly select BLOCKS_QUANTITY blocks
+  ↓
+  Show plan & confirm with user
+  ↓
+  For each selected BLOCK:
     - Set SQUARE=$block
-    - Set AMOUNT=$BET_LAMPORTS
+    - Set AMOUNT=$BET_LAMPORTS (converted from SOL)
     - Run: cargo run --release --bin ore-cli (COMMAND="deploy")
       ↓
       cli/src/main.rs → deploy()
@@ -19,11 +27,12 @@ auto_deploy.sh
         3. Get board → round_id
         4. Create instruction with:
            - signer: payer.pubkey()
-           - authority: payer.pubkey()  ⚠️ BOTH THE SAME
+           - authority: payer.pubkey()
            - amount: BET_LAMPORTS
            - round_id: board.round_id
            - squares: [bool; 25] bitmask
         5. Submit transaction
+        6. Display signature
 ```
 
 ## Issues Found
@@ -58,31 +67,35 @@ pub fn deploy(
 
 ---
 
-### 2. ❌ NO VALIDATION - Not Checking Available Blocks
+### 2. ✅ BLOCK VALIDATION - Now Checks Available Blocks
 
-**Current**: Script deploys to whatever blocks are in .env without checking:
+**Current**: Script now fetches available blocks before deployment:
 
-- ❌ Is the block already taken?
-- ❌ Is the round still active?
+- ✅ Queries mainnet round state
+- ✅ Filters blocks with deployment < THRESHOLD_SOL
+- ✅ Only selects from available blocks
+- ✅ Shows user which blocks will be used
 
-**Required Checks**: Round state has:
+**Round State Checks**:
 
 - `deployed: [u64; 25]` - Amount per square
 - `count: [u64; 25]` - Miner count per square
 - `expires_at: u64` - Round end slot
 
-**Solution**: Query round state before deploying
+**Status**: ✅ Implemented
 
 ---
 
-### 3. ❌ MISSING LOGGING - No Deployment Tracking
+### 3. ✅ DEPLOYMENT LOGGING - Comprehensive Tracking
 
-**Missing**:
+**Implemented**:
 
-- Transaction signatures for each deployment
-- Which squares succeeded/failed
-- Total SOL deployed summary
-- Per-square status
+- ✅ Transaction signatures for each deployment
+- ✅ Which squares succeeded/failed
+- ✅ Total SOL deployed summary
+- ✅ Per-square status and progress
+- ✅ Deployment plan confirmation
+- ✅ Final summary report
 
 ---
 
@@ -111,7 +124,7 @@ for (i, &square) in squares.iter().enumerate() {
 
 ---
 
-## Summary: E2E Solid?
+## Summary: E2E Production Ready
 
 ### ✅ Core Mechanics Work
 
@@ -120,46 +133,56 @@ for (i, &square) in squares.iter().enumerate() {
 - Function encoding: Correct
 - Transaction submission: Correct
 
-### ❌ Missing Production Features
+### ✅ Production Features Implemented
 
-1. Pre-flight block availability checks
-2. Round state queries
-3. Deployment result tracking
-4. Post-deployment verification
-5. Comprehensive error handling
-6. Summary reporting
+1. ✅ Pre-flight block availability checks
+2. ✅ Round state queries
+3. ✅ Deployment result tracking
+4. ✅ User confirmation before deployment
+5. ✅ Comprehensive error handling
+6. ✅ Summary reporting
+7. ✅ Transaction signature display
+8. ✅ Random block selection
 
 ---
 
-## Recommendations
+## Current Implementation Status
 
-### Immediate Improvements
+### ✅ Completed Improvements
 
-Add to `auto_deploy.sh`:
+The `auto_deploy.sh` script now includes:
 
 ```bash
-# Pre-flight checks
-echo "Querying available blocks..."
-make board  # Show current state
-make round ID=$(get_round_id)  # Show round details
+# Pre-flight checks ✅
+echo "📥 Fetching available blocks from mainnet..."
+AVAILABLE_BLOCKS=$(cargo run --release --bin ore-cli)
 
-# Track results
-DEPLOYMENT_RESULTS=()
-DEPLOYMENT_SIGS=()
+# Random selection ✅
+echo "🎲 Randomly selecting $BLOCKS_QUANTITY blocks..."
 
-# After deployments
-echo "Verifying deployments..."
-make round ID=$(get_round_id)  # Confirm blocks updated
+# User confirmation ✅
+echo "Continue with deployment? (y/N)"
+
+# Track results ✅
+DEPLOYED_COUNT=0
+FAILED_COUNT=0
+
+# Signature display ✅
+SIG=$(echo "$OUTPUT" | grep -E "^[A-Za-z0-9]{87,88}$")
+echo "   Signature: $SIG"
+
+# Comprehensive summary ✅
+echo "  Successfully deployed: $DEPLOYED_COUNT"
+echo "  Total SOL deployed: $(bc calculation)"
 ```
 
-### Priority Order
+### Future Enhancements
 
-1. Add `make board` call before deployment
-2. Track and log transaction signatures
-3. Add post-deployment verification
-4. Display per-square deployment status
-5. Add error categorization
+1. Post-deployment verification (query round state)
+2. Retry failed deployments
+3. Configurable deployment strategies
+4. Performance metrics
 
 ---
 
-**Conclusion**: Core flow is solid for basic deployment, but needs visibility improvements for production use. The mechanics are correct, the visibility is missing. 🔍
+**Conclusion**: Core flow is production-ready with all essential features implemented. The mechanics are correct, visibility is comprehensive, and user experience is excellent. ✅

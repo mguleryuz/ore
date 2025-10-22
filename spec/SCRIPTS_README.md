@@ -4,15 +4,15 @@ This directory contains automated scripts and tools for ORE mining block deploym
 
 ## 📁 Files Created
 
-| File | Purpose |
-|------|---------|
-| `script/setup.sh` | Dependency installation and environment setup |
-| `script/auto_deploy.sh` | Block selection and deployment automation |
-| `script/generate_keypair.sh` | Secure keypair generation (no history) |
-| `.env.example` | Configuration template |
-| `Makefile` | Easy command shortcuts (recommended) |
-| `spec/QUICKSTART.md` | Detailed getting started guide |
-| `spec/MAKEFILE_REFERENCE.md` | Complete Makefile command reference |
+| File                         | Purpose                                       |
+| ---------------------------- | --------------------------------------------- |
+| `script/setup.sh`            | Dependency installation and environment setup |
+| `script/auto_deploy.sh`      | Block selection and deployment automation     |
+| `script/generate_keypair.sh` | Secure keypair generation (no history)        |
+| `.env.example`               | Configuration template                        |
+| `Makefile`                   | Easy command shortcuts (recommended)          |
+| `spec/QUICKSTART.md`         | Detailed getting started guide                |
+| `spec/MAKEFILE_REFERENCE.md` | Complete Makefile command reference           |
 
 ## 🚀 Recommended Usage (with Makefile)
 
@@ -85,19 +85,22 @@ Configure your deployment in the `.env` file:
 
 ```bash
 # Your Solana wallet keypair
-PRIVATE_KEY_PATH=/path/to/your/keypair.json
+PRIVATE_KEY_PATH=./tmp/keypair.json
 
 # RPC endpoint
 RPC_URL=https://api.mainnet-beta.solana.com
 
 # Amount to bet per block (in SOL)
-BET_AMOUNT=0.1
+BET_AMOUNT=0.01
 
-# Blocks to deploy to (0-24, comma-separated)
-BLOCKS=5,10,15,20
+# Number of blocks to randomly select and deploy to (1-25)
+BLOCKS_QUANTITY=3
 
-# Optional: delay between deployments
+# Optional: delay between deployments (in seconds)
 DEPLOYMENT_DELAY=1
+
+# Optional: threshold for "available" blocks (in SOL)
+# THRESHOLD_SOL=1.0
 ```
 
 ## 📊 Block Layout
@@ -121,17 +124,20 @@ The board has 25 squares (0-24) in a 5x5 grid:
 ## 🎯 Common Make Commands
 
 ### Setup & Info
+
 - `make help` - Show all commands
 - `make setup` - Install dependencies
 - `make check-deps` - Verify installation
 - `make env` - Create .env file
 
 ### Deployment
+
 - `make deploy` - Deploy to blocks
 - `make build` - Build the project
 - `make clean` - Clean build
 
 ### Queries
+
 - `make board` - Show board state
 - `make miner` - Show your miner
 - `make treasury` - Show treasury
@@ -139,11 +145,13 @@ The board has 25 squares (0-24) in a 5x5 grid:
 - `make round ID=X` - Show round X
 
 ### Transactions
+
 - `make claim` - Claim rewards
 - `make checkpoint` - Checkpoint miner
 - `make reset` - Reset board
 
 ### Wallet
+
 - `make balance` - Show SOL balance
 - `make address` - Show wallet address
 
@@ -156,37 +164,44 @@ The board has 25 squares (0-24) in a 5x5 grid:
 ## 🔍 Features
 
 ### Smart Setup Script (`setup.sh`)
+
 ✅ Detects macOS and Linux  
 ✅ Installs Rust, Cargo, Solana CLI  
 ✅ Installs required utilities (bc, pkg-config, etc.)  
 ✅ Builds the project  
 ✅ Never overwrites existing `.env`  
-✅ Safe to run multiple times  
+✅ Safe to run multiple times
 
 ### Automated Deployment (`auto_deploy.sh`)
-✅ Auto-runs setup if needed  
-✅ Validates block numbers (0-24)  
+
+✅ Fetches available blocks from mainnet  
+✅ Randomly selects N blocks from available ones  
+✅ Shows deployment plan with confirmation  
+✅ Validates configuration  
 ✅ Converts SOL to lamports automatically  
-✅ Deploys to multiple blocks  
-✅ Shows deployment progress  
-✅ Provides detailed summary  
+✅ Deploys to selected blocks  
+✅ Shows deployment progress and signatures  
+✅ Provides detailed summary
 
 ### Powerful Makefile
+
 ✅ 30+ convenient commands  
 ✅ All phony targets  
 ✅ Consistent interface  
 ✅ Parameter passing support  
 ✅ Color-coded help output  
-✅ Error handling  
+✅ Error handling
 
 ## 🛡️ Safety Features
 
 1. **Configuration Protection**
+
    - `.env` in `.gitignore`
    - Never overwrites existing config
    - Validates required parameters
 
 2. **Dependency Validation**
+
    - Checks before running
    - Auto-installs if missing
    - Clear error messages
@@ -199,11 +214,13 @@ The board has 25 squares (0-24) in a 5x5 grid:
 ## 🔄 Workflow Examples
 
 ### Example 1: Quick Deploy
+
 ```bash
 make deploy
 ```
 
 ### Example 2: Check Everything First
+
 ```bash
 make board      # See board state
 make miner      # Check your stats
@@ -212,6 +229,7 @@ make deploy     # Deploy
 ```
 
 ### Example 3: Monitor Round
+
 ```bash
 # Get current round from board
 make board
@@ -224,6 +242,7 @@ make deploy
 ```
 
 ### Example 4: Claim and Re-deploy
+
 ```bash
 make claim      # Claim rewards
 make balance    # Verify SOL received
@@ -233,6 +252,7 @@ make deploy     # Deploy again
 ## 🆘 Troubleshooting
 
 ### Dependencies Missing
+
 ```bash
 make setup
 # or
@@ -240,20 +260,23 @@ make setup
 ```
 
 ### .env Not Found
+
 ```bash
 make env
 nano .env  # Configure
 ```
 
 ### Build Errors
+
 ```bash
 make clean
 make build
 ```
 
 ### Permission Errors
+
 ```bash
-chmod +x setup.sh auto_deploy.sh
+chmod +x script/setup.sh script/auto_deploy.sh
 ```
 
 ## 📊 Environment Variables
@@ -261,11 +284,14 @@ chmod +x setup.sh auto_deploy.sh
 You can override `.env` values:
 
 ```bash
-# Use different blocks temporarily
-BLOCKS=0,1,2,3,4 make deploy
+# Deploy to more blocks temporarily
+BLOCKS_QUANTITY=10 make deploy
 
 # Use different amount
-BET_AMOUNT=0.5 make deploy
+BET_AMOUNT=0.05 make deploy
+
+# Use different threshold
+THRESHOLD_SOL=0.5 make deploy
 
 # Use different RPC
 RPC_URL=https://custom-rpc.com make board
@@ -306,4 +332,3 @@ cargo clean
 **Need help?** Run `make help` or check `QUICKSTART.md`
 
 Happy mining! ⛏️✨
-
