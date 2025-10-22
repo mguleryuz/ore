@@ -256,7 +256,7 @@ make deploy     # Deploy again
 ```bash
 make setup
 # or
-./setup.sh
+./script/setup.sh
 ```
 
 ### .env Not Found

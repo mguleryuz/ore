@@ -61,7 +61,7 @@ DEPLOYMENT_DELAY=1
 # THRESHOLD_SOL=1.0
 ```
 
-### Step 3: Run Block Selection Script
+### Step 3: Deploy to Blocks with Automatic Selection
 
 Once configured, run the deployment script:
 
@@ -274,7 +274,7 @@ Continue with deployment? (y/N) y
 ## 📚 Additional Resources
 
 - [Solana Documentation](https://docs.solana.com/)
-- [ORE Protocol README](README.md)
+- [ORE Protocol README](../README.md)
 - [Rust Documentation](https://doc.rust-lang.org/)
 
 ## ⚠️ Important Notes
