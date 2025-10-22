@@ -1,3 +1,9 @@
 .DS_Store
 target
 test-ledger
+.env
+
+# Cursor IDE
+.cursor/
+!.cursor/rules/
+
