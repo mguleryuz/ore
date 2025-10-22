@@ -1,45 +1,56 @@
 use anyhow::Result;
-use litesvm::LiteSVM;
 use ore_api::prelude::*;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    account::Account,
+    account::{Account, AccountSharedData},
     native_token::lamports_to_sol,
     pubkey::Pubkey,
-    signature::{Keypair, Signature},
+    signature::Signature,
     signer::Signer,
     system_instruction,
     transaction::Transaction,
 };
+use solana_program_test::{ProgramTest, ProgramTestContext};
 use steel::AccountDeserialize;
 
 /// Fetch account data from mainnet via RPC
-pub async fn fetch_mainnet_account(rpc_url: &str, address: Pubkey) -> Result<Account> {
+pub fn fetch_mainnet_account(rpc_url: &str, address: Pubkey) -> Result<Account> {
     let client = RpcClient::new(rpc_url.to_string());
     let account = client.get_account(&address)?;
     Ok(account)
 }
 
-/// Create and configure LiteSVM test context
-pub fn setup_test_context() -> LiteSVM {
-    LiteSVM::new()
+/// Create and configure test context using solana-program-test
+pub async fn setup_test_context() -> ProgramTestContext {
+    let program_test = ProgramTest::default();
+    
+    // Add any necessary programs or accounts here
+    // For now, just use the default test context
+    
+    program_test.start_with_context().await
 }
 
-/// Fund an account with SOL
-pub fn fund_account(svm: &mut LiteSVM, pubkey: Pubkey, lamports: u64) {
-    let ix = system_instruction::transfer(&svm.payer(), &pubkey, lamports);
+/// Fund an account with SOL in test context
+pub async fn fund_account(context: &mut ProgramTestContext, pubkey: Pubkey, lamports: u64) {
+    let ix = system_instruction::transfer(&context.payer.pubkey(), &pubkey, lamports);
     let tx = Transaction::new_signed_with_payer(
         &[ix],
-        Some(&svm.payer()),
-        &[&svm.payer_keypair()],
-        svm.latest_blockhash(),
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
     );
-    svm.send_transaction(tx).unwrap();
+    context.banks_client.process_transaction(tx).await.unwrap();
 }
 
-/// Add account to LiteSVM from mainnet data
-pub fn add_mainnet_account(svm: &mut LiteSVM, address: Pubkey, account: Account) {
-    svm.set_account(address, account).unwrap();
+/// Add account to test context from mainnet data
+pub async fn add_mainnet_account(
+    context: &mut ProgramTestContext,
+    address: Pubkey,
+    account: Account,
+) {
+    // Convert Account to AccountSharedData for solana-program-test
+    let account_shared_data = AccountSharedData::from(account);
+    context.set_account(&address, &account_shared_data);
 }
 
 /// Pretty print board state

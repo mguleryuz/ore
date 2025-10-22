@@ -10,9 +10,8 @@ solana-sdk.workspace = true
 solana-program.workspace = true
 solana-program-test.workspace = true
 solana-client.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread"] }
 anyhow.workspace = true
-litesvm = "0.3"
 spl-token.workspace = true
 bincode.workspace = true
 steel.workspace = true

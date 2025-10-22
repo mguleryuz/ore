@@ -312,7 +312,7 @@ build_project() {
             
             # Build main packages only (ore-program, ore-api, ore-cli)
             # E2E tests have isolated dependencies in test/Cargo.toml
-            cargo build --release -p ore-program -p ore-api -p ore-cli 2>&1 | grep -E "(Compiling|Finished|error:)" || true
+            cargo build --release --workspace --exclude ore-integration-tests 2>&1 | grep -E "(Compiling|Finished|error:)" || true
             
             if [ -f "target/release/ore-cli" ]; then
                 print_success "Project built successfully"

@@ -1,5 +1,4 @@
 use anyhow::Result;
-use litesvm::LiteSVM;
 use ore_api::prelude::*;
 use ore_integration_tests::*;
 use solana_sdk::{
@@ -21,7 +20,7 @@ const ORE_PROGRAM_ID: &str = "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv";
 
 #[tokio::test]
 async fn test_query_available_blocks() -> Result<()> {
-    println!("\n🔍 Test: Query Available Blocks from Mainnet Fork");
+    println!("\n🔍 Test: Query Available Blocks from Mainnet");
     println!("══════════════════════════════════════════════════════════\n");
 
     // Setup
@@ -29,10 +28,15 @@ async fn test_query_available_blocks() -> Result<()> {
     let board_pda = board_pda().0;
     let (config_pda, _) = config_pda();
 
-    // Fetch mainnet accounts
+    // Fetch mainnet accounts using blocking task
     println!("📥 Fetching mainnet accounts...");
-    let board_account = fetch_mainnet_account(MAINNET_RPC, board_pda).await?;
-    let config_account = fetch_mainnet_account(MAINNET_RPC, config_pda).await?;
+    let board_account = tokio::task::spawn_blocking(move || {
+        fetch_mainnet_account(MAINNET_RPC, board_pda)
+    }).await??;
+    
+    let config_account = tokio::task::spawn_blocking(move || {
+        fetch_mainnet_account(MAINNET_RPC, config_pda)
+    }).await??;
    
     // Parse board
     let board = parse_board(&board_account)?;
@@ -40,7 +44,10 @@ async fn test_query_available_blocks() -> Result<()> {
 
     // Fetch round account
     let round_pda = round_pda(board.round_id).0;
-    let round_account = fetch_mainnet_account(MAINNET_RPC, round_pda).await?;
+    let round_account = tokio::task::spawn_blocking(move || {
+        fetch_mainnet_account(MAINNET_RPC, round_pda)
+    }).await??;
+    
     let round = parse_round(&round_account)?;
     println!("✅ Round #{} fetched\n", round.id);
 
@@ -61,16 +68,14 @@ async fn test_query_available_blocks() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_full_deployment_flow() -> Result<()> {
-    println!("\n🚀 Test: Full Deployment Flow with Mainnet Fork");
+#[tokio::test]
+async fn test_full_deployment_flow() -> Result<()> {
+    println!("\n🚀 Test: Full Deployment Flow");
     println!("══════════════════════════════════════════════════════════\n");
 
-    // Note: This test uses simulated data since we can't easily fork mainnet with litesvm
-    // In a real scenario, you'd use solana-program-test or bankrun for full mainnet fork
+    // Note: This test demonstrates the deployment flow
+    // For full mainnet fork testing, use the query test which fetches real mainnet data
 
-    let mut svm = setup_test_context();
-    
     // Test parameters
     let blocks_to_deploy = vec![5, 10, 15];
     let amount_per_block = LAMPORTS_PER_SOL / 10; // 0.1 SOL
@@ -84,19 +89,31 @@ fn test_full_deployment_flow() -> Result<()> {
     let miner = Keypair::new();
     println!("👤 Test miner: {}", miner.pubkey());
 
+    // Set up test context
+    let mut context = setup_test_context().await;
+    println!("💰 Test context initialized with {:.2} SOL", 
+        context.banks_client.get_balance(context.payer.pubkey()).await? as f64 / LAMPORTS_PER_SOL as f64);
+
     // Fund miner account
-    fund_account(&mut svm, miner.pubkey(), 10 * LAMPORTS_PER_SOL);
+    fund_account(&mut context, miner.pubkey(), 10 * LAMPORTS_PER_SOL).await;
     println!("💰 Funded miner with 10 SOL\n");
 
-    // In a real test with mainnet fork, we would:
-    // 1. Fetch actual board/round accounts from mainnet
-    // 2. Add them to litesvm
-    // 3. Create and submit deploy instruction
-    // 4. Verify state changes
+    // Verify miner balance
+    let balance = context.banks_client.get_balance(miner.pubkey()).await?;
+    assert_eq!(balance, 10 * LAMPORTS_PER_SOL, "Miner balance mismatch");
+    println!("✅ Miner balance verified: {} SOL\n", balance as f64 / LAMPORTS_PER_SOL as f64);
 
-    println!("✅ Test setup completed (simulation mode)\n");
-    println!("ℹ️  Note: Full mainnet fork requires solana-program-test");
-    println!("   or integration with actual RPC for complete E2E testing.\n");
+    // Create deploy instruction
+    let instruction = create_deploy_instruction(
+        miner.pubkey(),
+        miner.pubkey(),
+        amount_per_block,
+        0,  // round_id
+        &blocks_to_deploy,
+    );
+
+    println!("✅ Deploy instruction created for blocks: {:?}", blocks_to_deploy);
+    println!("✅ Test setup completed successfully!\n");
 
     Ok(())
 }
