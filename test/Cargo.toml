@@ -16,3 +16,7 @@ spl-token.workspace = true
 bincode.workspace = true
 steel.workspace = true
 
+[[test]]
+name = "deploy_e2e"
+path = "e2e/deploy_e2e.rs"
+
