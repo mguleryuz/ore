@@ -225,22 +225,19 @@ install_openssl() {
 check_homebrew() {
     if [ "$OS" = "macos" ]; then
         if ! command_exists brew; then
-            print_warning "Homebrew is not installed. It's recommended for managing dependencies on macOS."
-            print_info "Install from: https://brew.sh/"
-            read -p "Would you like to install Homebrew now? (y/n) " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                
-                # Add to PATH for Apple Silicon Macs
-                if [[ $(uname -m) == 'arm64' ]]; then
-                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-                    eval "$(/opt/homebrew/bin/brew shellenv)"
-                fi
-                
+            print_warning "Homebrew is not installed. Installing automatically..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            
+            # Add to PATH for Apple Silicon Macs
+            if [[ $(uname -m) == 'arm64' ]]; then
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+                eval "$(/opt/homebrew/bin/brew shellenv)"
+            fi
+            
+            if command_exists brew; then
                 print_success "Homebrew installed successfully"
             else
-                print_warning "Skipping Homebrew installation. Some features may not work."
+                print_warning "Homebrew installation may have failed, but continuing..."
             fi
         else
             print_success "Homebrew is already installed"
@@ -288,14 +285,16 @@ setup_env_file() {
 verify_wallet() {
     print_info "Checking for Solana wallet..."
     
+    PROJECT_KEYPAIR="./tmp/keypair.json"
     DEFAULT_KEYPAIR="$HOME/.config/solana/id.json"
     
-    if [ -f "$DEFAULT_KEYPAIR" ]; then
+    if [ -f "$PROJECT_KEYPAIR" ]; then
+        print_success "Found Solana wallet at: $PROJECT_KEYPAIR"
+    elif [ -f "$DEFAULT_KEYPAIR" ]; then
         print_success "Found Solana wallet at default location: $DEFAULT_KEYPAIR"
     else
-        print_warning "No Solana wallet found at default location"
-        print_info "You can generate one with: solana-keygen new"
-        print_info "Or specify a custom path in your .env file"
+        print_warning "No Solana wallet found"
+        print_info "Generate one with: make generate-keypair"
     fi
 }
 
@@ -335,6 +334,17 @@ main() {
     cd "$(dirname "$0")"
     setup_env_file
     echo ""
+    
+    # Generate keypair if needed
+    print_info "🔐 Checking for Solana keypair..."
+    if [ ! -f ../tmp/keypair.json ]; then
+        print_info "Generating keypair automatically..."
+        ./generate_keypair.sh
+        echo ""
+    else
+        print_success "Keypair already exists at ../tmp/keypair.json"
+        echo ""
+    fi
     
     # Build the project
     build_project

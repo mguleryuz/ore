@@ -1,38 +1,14 @@
 #!/bin/bash
 
-# Check if dependencies are installed, if not run setup automatically
-if ! command -v cargo &> /dev/null || ! command -v bc &> /dev/null; then
-    echo "⚠️  Required dependencies not found. Running setup..."
-    ./setup.sh
-    if [ $? -ne 0 ]; then
-        echo "❌ Setup failed. Please check the error messages above."
-        exit 1
-    fi
-fi
-
 # Load environment variables
 if [ -f .env ]; then
     export $(cat .env | grep -v '^#' | xargs)
 else
-    # Try to create .env from .env.example
-    if [ -f .env.example ]; then
-        echo "⚠️  .env file not found. Running setup..."
-        ./setup.sh
-        if [ $? -ne 0 ]; then
-            echo "❌ Setup failed. Please check the error messages above."
-            exit 1
-        fi
-        # Try loading again
-        if [ -f .env ]; then
-            export $(cat .env | grep -v '^#' | xargs)
-        else
-            echo "❌ Failed to create .env file. Please create one based on .env.example"
-            exit 1
-        fi
-    else
-        echo "❌ .env file not found and .env.example is missing."
-        exit 1
-    fi
+    echo "❌ .env file not found"
+    echo ""
+    echo "Please run setup first:"
+    echo "  make setup"
+    exit 1
 fi
 
 # Validate required environment variables

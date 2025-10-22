@@ -6,12 +6,13 @@ This directory contains automated scripts and tools for ORE mining block deploym
 
 | File | Purpose |
 |------|---------|
-| `setup.sh` | Dependency installation and environment setup |
-| `select_blocks.sh` | Block selection and deployment automation |
+| `script/setup.sh` | Dependency installation and environment setup |
+| `script/select_blocks.sh` | Block selection and deployment automation |
+| `script/generate_keypair.sh` | Secure keypair generation (no history) |
 | `.env.example` | Configuration template |
 | `Makefile` | Easy command shortcuts (recommended) |
-| `QUICKSTART.md` | Detailed getting started guide |
-| `MAKEFILE_REFERENCE.md` | Complete Makefile command reference |
+| `spec/QUICKSTART.md` | Detailed getting started guide |
+| `spec/MAKEFILE_REFERENCE.md` | Complete Makefile command reference |
 
 ## 🚀 Recommended Usage (with Makefile)
 
@@ -59,8 +60,10 @@ If you prefer to use the scripts directly:
 
 ```bash
 # Run setup script
-chmod +x setup.sh
-./setup.sh
+make setup
+# or
+chmod +x script/setup.sh
+./script/setup.sh
 
 # Configure .env
 cp .env.example .env
@@ -70,8 +73,10 @@ nano .env  # Edit with your settings
 ### Deploy to Blocks
 
 ```bash
-chmod +x select_blocks.sh
-./select_blocks.sh
+make deploy
+# or
+chmod +x script/select_blocks.sh
+./script/select_blocks.sh
 ```
 
 ## ⚙️ Configuration (.env)

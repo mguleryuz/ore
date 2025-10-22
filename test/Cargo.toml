@@ -1,0 +1,19 @@
+[package]
+name = "ore-integration-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+ore-api = { path = "../api" }
+solana-sdk.workspace = true
+solana-program.workspace = true
+solana-program-test.workspace = true
+solana-client.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+litesvm.workspace = true
+spl-token.workspace = true
+bincode.workspace = true
+steel.workspace = true
+

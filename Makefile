@@ -1,7 +1,17 @@
 # ORE Mining - Makefile
 # Easy commands to setup and deploy blocks
 
-.PHONY: help setup deploy build clean check-deps board miner treasury config round claim checkpoint reset test install env
+.PHONY: help setup deploy build clean check-deps board miner treasury config round claim checkpoint reset test install env generate-keypair balance address test-e2e test-e2e-verbose test-e2e-mainnet ensure-setup
+
+# Helper: Check if all dependencies are installed
+_check_deps = command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1 && command -v solana >/dev/null 2>&1 && command -v bc >/dev/null 2>&1 && command -v pkg-config >/dev/null 2>&1 && [ -f .env ] && [ -f ./tmp/keypair.json ]
+
+# Helper: Ensure all dependencies are installed before running commands
+ensure-setup:
+	@if ! ($(call _check_deps)); then \
+		echo "⚠️  Missing dependencies or configuration. Running setup..."; \
+		./script/setup.sh; \
+	fi
 
 # Default target - show help
 help:
@@ -34,6 +44,16 @@ help:
 	@echo "  make checkpoint     - Checkpoint a miner (requires AUTHORITY=<pubkey>)"
 	@echo "  make reset          - Reset the board for a new round"
 	@echo ""
+	@echo "E2E Testing:"
+	@echo "  make test-e2e       - Run E2E integration tests"
+	@echo "  make test-e2e-verbose - Run E2E tests with output"
+	@echo "  make test-e2e-mainnet - Query mainnet for testing"
+	@echo ""
+	@echo "Wallet Management:"
+	@echo "  make generate-keypair - Generate new keypair (secure)"
+	@echo "  make balance        - Show wallet balance"
+	@echo "  make address        - Show wallet address"
+	@echo ""
 	@echo "Examples:"
 	@echo "  make setup                    - First time setup"
 	@echo "  make deploy                   - Deploy with .env config"
@@ -44,14 +64,14 @@ help:
 # Setup - Install all dependencies
 setup:
 	@echo "🔧 Running setup script..."
-	@chmod +x setup.sh
-	@./setup.sh
+	@chmod +x script/setup.sh
+	@./script/setup.sh
 
 # Deploy to selected blocks
-deploy:
+deploy: ensure-setup
 	@echo "🚀 Deploying to selected blocks..."
-	@chmod +x select_blocks.sh
-	@./select_blocks.sh
+	@chmod +x script/select_blocks.sh
+	@./script/select_blocks.sh
 
 # Build the project
 build:
@@ -100,7 +120,7 @@ env:
 	fi
 
 # Query commands using the CLI
-board:
+board: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		export KEYPAIR=$$PRIVATE_KEY_PATH && \
@@ -108,7 +128,7 @@ board:
 		export COMMAND="board" && \
 		cargo run --release --bin ore-cli
 
-miner:
+miner: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		export KEYPAIR=$$PRIVATE_KEY_PATH && \
@@ -116,7 +136,7 @@ miner:
 		export COMMAND="miner" && \
 		cargo run --release --bin ore-cli
 
-treasury:
+treasury: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		export KEYPAIR=$$PRIVATE_KEY_PATH && \
@@ -124,7 +144,7 @@ treasury:
 		export COMMAND="treasury" && \
 		cargo run --release --bin ore-cli
 
-config:
+config: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		export KEYPAIR=$$PRIVATE_KEY_PATH && \
@@ -132,7 +152,7 @@ config:
 		export COMMAND="config" && \
 		cargo run --release --bin ore-cli
 
-round:
+round: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@if [ -z "$(ID)" ]; then echo "❌ ID parameter required. Usage: make round ID=123"; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
@@ -142,7 +162,7 @@ round:
 		export ID=$(ID) && \
 		cargo run --release --bin ore-cli
 
-clock:
+clock: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		export KEYPAIR=$$PRIVATE_KEY_PATH && \
@@ -150,7 +170,7 @@ clock:
 		export COMMAND="clock" && \
 		cargo run --release --bin ore-cli
 
-stake:
+stake: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		export KEYPAIR=$$PRIVATE_KEY_PATH && \
@@ -159,7 +179,7 @@ stake:
 		cargo run --release --bin ore-cli
 
 # Transaction commands
-claim:
+claim: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@echo "💰 Claiming rewards..."
 	@export $$(cat .env | grep -v '^#' | xargs) && \
@@ -168,7 +188,7 @@ claim:
 		export COMMAND="claim" && \
 		cargo run --release --bin ore-cli
 
-checkpoint:
+checkpoint: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@if [ -z "$(AUTHORITY)" ]; then \
 		echo "⚠️  No AUTHORITY specified, using keypair pubkey..."; \
@@ -187,7 +207,7 @@ checkpoint:
 		cargo run --release --bin ore-cli; \
 	fi
 
-checkpoint-all:
+checkpoint-all: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@echo "📍 Checkpointing all miners..."
 	@export $$(cat .env | grep -v '^#' | xargs) && \
@@ -196,7 +216,7 @@ checkpoint-all:
 		export COMMAND="checkpoint_all" && \
 		cargo run --release --bin ore-cli
 
-reset:
+reset: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@echo "🔄 Resetting board..."
 	@export $$(cat .env | grep -v '^#' | xargs) && \
@@ -238,16 +258,32 @@ update:
 	@cargo update
 
 # Show wallet balance
-balance:
+balance: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		solana balance --keypair $$PRIVATE_KEY_PATH --url $$RPC_URL
 
 # Show wallet address
-address:
+address: ensure-setup
 	@if [ ! -f .env ]; then echo "❌ .env file not found. Run 'make env' first."; exit 1; fi
 	@export $$(cat .env | grep -v '^#' | xargs) && \
 		solana address --keypair $$PRIVATE_KEY_PATH
+
+# Generate new keypair (secure, no history)
+generate-keypair: check-solana
+	@echo "🔐 Generating new Solana keypair..."
+	@chmod +x script/generate_keypair.sh
+	@./script/generate_keypair.sh
+
+# Check if Solana CLI is installed
+check-solana:
+	@if ! command -v solana-keygen &> /dev/null; then \
+		echo "❌ Error: Solana CLI not found"; \
+		echo ""; \
+		echo "Run setup first to install all dependencies:"; \
+		echo "  make setup"; \
+		exit 1; \
+	fi
 
 # All-in-one: setup, build, and show help
 install: setup build
@@ -261,4 +297,17 @@ quickstart:
 	else \
 		echo "❌ spec/QUICKSTART.md not found"; \
 	fi
+
+# E2E Testing
+test-e2e:
+	@echo "🧪 Running E2E integration tests..."
+	@cd test && cargo test --release
+
+test-e2e-verbose:
+	@echo "🧪 Running E2E tests with verbose output..."
+	@cd test && cargo test --release -- --nocapture
+
+test-e2e-mainnet:
+	@echo "🧪 Running mainnet query tests..."
+	@cd test && cargo test --release test_query_available_blocks -- --nocapture --ignored
 

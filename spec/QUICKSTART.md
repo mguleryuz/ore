@@ -59,7 +59,9 @@ DEPLOYMENT_DELAY=1
 Once configured, run the deployment script:
 
 ```bash
-./select_blocks.sh
+make deploy
+# or
+./script/select_blocks.sh
 ```
 
 The script will:
