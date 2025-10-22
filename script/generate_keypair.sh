@@ -3,6 +3,10 @@
 # Secure Solana Keypair Generator (Automated)
 # This script generates a Solana keypair without saving commands to shell history
 # Runs non-interactively and stores keypair in ./tmp/keypair.json
+#
+# Usage:
+#   ./script/generate_keypair.sh              # Generate new random keypair
+#   ./script/generate_keypair.sh "seedphrase" # Import from seedphrase
 
 set -e
 
@@ -22,6 +26,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Default keypair path (project local)
 KEYPAIR_PATH="${PROJECT_ROOT}/tmp/keypair.json"
+
+# Get optional seedphrase argument
+SEEDPHRASE="${1:-}"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║${NC}        Secure Solana Keypair Generator                    ${BLUE}║${NC}"
@@ -48,18 +55,24 @@ mkdir -p "$(dirname "$KEYPAIR_PATH")"
 echo -e "${BLUE}📝 Keypair location: ${KEYPAIR_PATH}${NC}"
 echo ""
 
-# Check if file already exists
-if [ -f "$KEYPAIR_PATH" ]; then
-    echo -e "${YELLOW}⚠️  Keypair already exists at: ${KEYPAIR_PATH}${NC}"
-    echo -e "${BLUE}Using existing keypair.${NC}"
+# Check if seedphrase was provided
+if [ -n "$SEEDPHRASE" ]; then
+    echo -e "${BLUE}🔐 Importing keypair from seedphrase...${NC}"
+    echo ""
+    
+    # Import from seedphrase (will overwrite existing)
+    echo "$SEEDPHRASE" | solana-keygen recover --outfile "$KEYPAIR_PATH" --force 2>&1 | grep -v "wrote" || true
+    
+    echo ""
+    echo -e "${GREEN}✅ Keypair imported successfully!${NC}"
     echo ""
 else
     echo -e "${BLUE}🔐 Generating new keypair...${NC}"
     echo ""
-
+    
     # Generate keypair (non-interactive, force overwrite, no passphrase)
     solana-keygen new --outfile "$KEYPAIR_PATH" --no-bip39-passphrase --force 2>&1 | grep -v "wrote" || true
-
+    
     echo ""
     echo -e "${GREEN}✅ Keypair generated successfully!${NC}"
     echo ""

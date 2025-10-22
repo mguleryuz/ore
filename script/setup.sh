@@ -89,19 +89,72 @@ install_solana() {
 
     print_warning "Solana CLI is not installed. Installing..."
     
-    sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-    
-    # Add to PATH
-    export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-    
-    if command_exists solana; then
-        print_success "Solana CLI installed successfully"
-        print_info "You may need to add Solana to your PATH. Add this to your ~/.bashrc or ~/.zshrc:"
-        echo "    export PATH=\"\$HOME/.local/share/solana/install/active_release/bin:\$PATH\""
-    else
-        print_error "Failed to install Solana CLI. Please install manually from https://docs.solana.com/cli/install-solana-cli-tools"
-        exit 1
+    # Try Homebrew first on macOS (most reliable)
+    if [ "$OS" = "macos" ] && command_exists brew; then
+        print_info "Attempting to install via Homebrew (most reliable on macOS)..."
+        if brew install solana 2>/dev/null; then
+            print_success "Solana CLI installed successfully via Homebrew"
+            return 0
+        fi
     fi
+    
+    # Try to install with retries via official installer
+    MAX_RETRIES=3
+    RETRY_COUNT=0
+    TEMP_INSTALLER="/tmp/solana_install_$$.sh"
+    
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        print_info "Download attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+        
+        # Download the installer script first (more reliable than piping)
+        if curl -sSfL https://release.solana.com/stable/install -o "$TEMP_INSTALLER" 2>/dev/null; then
+            # Make it executable
+            chmod +x "$TEMP_INSTALLER"
+            
+            # Execute the installer
+            if "$TEMP_INSTALLER" >/dev/null 2>&1; then
+                # Add to PATH
+                export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+                
+                if command_exists solana; then
+                    print_success "Solana CLI installed successfully"
+                    print_info "Solana has been added to PATH for this session"
+                    rm -f "$TEMP_INSTALLER" 2>/dev/null || true
+                    return 0
+                fi
+            fi
+        fi
+        
+        ((RETRY_COUNT++))
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            print_warning "Installation attempt $RETRY_COUNT failed. Retrying in 3 seconds..."
+            sleep 3
+        fi
+    done
+    
+    # Clean up temp file
+    rm -f "$TEMP_INSTALLER" 2>/dev/null || true
+    
+    # If we get here, installation failed after retries
+    print_warning "⚠️  Could not install Solana CLI automatically"
+    print_info "This is often due to network connectivity or SSL issues."
+    echo ""
+    print_info "Try these alternatives:"
+    echo "  1. Check your internet connection"
+    echo "  2. Try installing manually:"
+    echo "     curl -sSfL https://release.solana.com/stable/install -o /tmp/solana-install.sh"
+    echo "     chmod +x /tmp/solana-install.sh"
+    echo "     /tmp/solana-install.sh"
+    echo ""
+    if [ "$OS" = "macos" ]; then
+        echo "  3. Or use Homebrew (recommended for macOS):"
+        echo "     brew install solana"
+        echo ""
+    fi
+    print_info "After manual installation, run setup again:"
+    echo "  make setup"
+    echo ""
+    return 1
 }
 
 # Install bc (basic calculator for bash)
@@ -255,8 +308,21 @@ build_project() {
             print_success "Project is already built (skipping rebuild)"
         else
             print_info "Building the ORE mining project..."
-            cargo build --release
-            print_success "Project built successfully"
+            echo ""
+            
+            # Build main packages only (ore-program, ore-api, ore-cli)
+            # E2E tests have isolated dependencies in test/Cargo.toml
+            cargo build --release -p ore-program -p ore-api -p ore-cli 2>&1 | grep -E "(Compiling|Finished|error:)" || true
+            
+            if [ -f "target/release/ore-cli" ]; then
+                print_success "Project built successfully"
+                echo ""
+                print_info "To run E2E tests, build them separately:"
+                echo "  cd test && cargo test --release"
+            else
+                print_error "Build failed"
+                exit 1
+            fi
         fi
     else
         print_error "Cargo.toml not found. Are you in the correct directory?"
@@ -319,6 +385,7 @@ main() {
     echo ""
     
     install_solana
+    SOLANA_INSTALL_RESULT=$?
     echo ""
     
     install_bc
@@ -331,18 +398,18 @@ main() {
     echo ""
     
     # Setup environment
-    cd "$(dirname "$0")"
+    cd "$(dirname "$0")/.."
     setup_env_file
     echo ""
     
     # Generate keypair if needed
     print_info "🔐 Checking for Solana keypair..."
-    if [ ! -f ../tmp/keypair.json ]; then
+    if [ ! -f ./tmp/keypair.json ]; then
         print_info "Generating keypair automatically..."
-        ./generate_keypair.sh
+        ./script/generate_keypair.sh
         echo ""
     else
-        print_success "Keypair already exists at ../tmp/keypair.json"
+        print_success "Keypair already exists at ./tmp/keypair.json"
         echo ""
     fi
     
@@ -366,13 +433,25 @@ main() {
         print_warning "⚠️  Action Required:"
         echo "  1. Edit .env file with your configuration"
         echo "  2. Ensure you have a Solana wallet keypair"
-        echo "  3. Run: ./select_blocks.sh"
+        echo "  3. Run: make deploy"
         echo ""
         print_info "📖 For detailed instructions, see: spec/QUICKSTART.md"
         echo ""
     else
-        print_info "You can now run: ./select_blocks.sh"
+        print_info "You can now run: make deploy"
         print_info "📖 For detailed instructions, see: spec/QUICKSTART.md"
+        echo ""
+    fi
+    
+    # Check if Solana install failed
+    if [ $SOLANA_INSTALL_RESULT -ne 0 ]; then
+        print_warning "⚠️  Solana CLI installation had issues (likely network timeout)"
+        print_info "Try installing manually:"
+        echo "  sh -c \"\$(curl -sSfL https://release.solana.com/stable/install)\""
+        echo "  export PATH=\"\$HOME/.local/share/solana/install/active_release/bin:\$PATH\""
+        echo ""
+        print_warning "After manual installation, run setup again:"
+        echo "  make setup"
         echo ""
     fi
     

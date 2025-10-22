@@ -1,3 +1,164 @@
+---
+alwaysApply: true
+---
+
+# Base Project Rules
+
+## Directory Structure
+
+This project follows a clean and organized directory structure. All contributors and AI assistants must adhere to these conventions:
+
+### Core Directories
+
+- **`/api`** - API definitions and SDK code
+
+  - Contains Rust source code for the ORE API
+  - State management, instructions, events, errors
+
+- **`/program`** - Solana program implementation
+
+  - Core mining program logic
+  - Instructions: deploy, checkpoint, claim, reset, etc.
+
+- **`/cli`** - Command-line interface
+
+  - CLI tool for interacting with the program
+  - Main entry point in `src/main.rs`
+
+- **`/spec`** - Documentation and specifications
+  - **All** documentation markdown files go here
+  - Examples: QUICKSTART.md, MAKEFILE_REFERENCE.md, SCRIPTS_README.md
+  - User guides, API specs, workflow documentation
+
+### Root Level Files
+
+Keep the root directory clean. Only these files should exist at root:
+
+- `README.md` - Main project README
+- `Cargo.toml` - Workspace configuration
+- `Cargo.lock` - Dependency lock file
+- `Makefile` - Build and deployment automation
+- `.env.example` - Environment variable template
+- `.gitignore` - Git ignore rules
+- `rust-toolchain.toml` - Rust toolchain specification
+
+**Note**: Shell scripts are organized in `/script` directory
+
+### Files to NEVER Create at Root
+
+❌ Do NOT create these at root level:
+
+- Specification documents (use `/spec` instead)
+- Test files (use appropriate `/test` directories)
+- Documentation beyond README.md (use `/spec`)
+- Shell scripts (use `/script` directory)
+- Build artifacts (they go in `/target`, which is gitignored)
+
+## Rules for AI Assistants
+
+When working on this project:
+
+1. **Documentation Placement**
+
+   - ALL documentation markdown files → `/spec` directory
+   - Only exception: `README.md` at root
+   - Update existing code references when moving docs
+
+2. **Script Organization**
+
+   - ALL shell scripts → `/script` directory
+   - Reference scripts via Makefile targets
+   - Always make scripts executable: `chmod +x`
+
+3. **Configuration Files**
+
+   - `.env.example` at root (template)
+   - `.env` never committed (in .gitignore)
+   - Cursor rules in `.cursor/rules/`
+
+4. **Code Organization**
+
+   - Rust code → `/api`, `/program`, or `/cli`
+   - Follow existing module structure
+   - Keep state management in `/api/src/state/`
+
+5. **Clean Root Principle**
+   - Root should be navigable at a glance
+   - Group related files into directories
+   - Don't clutter with temporary files
+
+## File Naming Conventions
+
+- **Snake_case**: Rust files (`miner_state.rs`)
+- **kebab-case**: Scripts (`select-blocks.sh`)
+- **SCREAMING_CASE**: Documentation (`README.md`, `QUICKSTART.md`)
+- **lowercase**: Configuration (`.env`, `.gitignore`)
+
+## Markdown Documentation Standards
+
+All markdown files in `/spec` should:
+
+1. Have a clear H1 title at the top
+2. Include a table of contents for long documents
+3. Use emoji sparingly but effectively (✅ ❌ 📝 🚀)
+4. Include code examples with proper syntax highlighting
+5. Have consistent formatting (use prettier/markdownlint if possible)
+
+## Enforcement
+
+When creating or moving files:
+
+```bash
+# ✅ CORRECT
+touch spec/NEW_FEATURE_GUIDE.md  # Documentation
+touch script/deploy.sh            # Shell scripts
+mv OUTDATED_DOC.md spec/
+
+# ❌ WRONG
+touch RANDOM_GUIDE.md      # at root
+touch deploy.sh            # scripts at root
+touch docs/guide.md        # wrong directory name
+```
+
+## Git Workflow
+
+1. Never commit sensitive data (`.env` is in `.gitignore`)
+2. Keep commits atomic and well-described
+3. Run `make fmt` and `make lint` before committing
+4. Update relevant documentation when changing functionality
+
+## Dependency Management
+
+- All Rust dependencies in appropriate `Cargo.toml` files
+- Run `cargo update` carefully
+- Document version requirements in README or spec docs
+- Lock file (`Cargo.lock`) is committed
+
+## Build Artifacts
+
+All build artifacts go in `/target` (gitignored):
+
+- Never commit compiled binaries
+- Use `make clean` to remove artifacts
+- CI/CD handles production builds
+
+## Future Directories (if needed)
+
+If the project grows, consider these additional directories:
+
+- `/test` - Integration and end-to-end tests ✅ (exists)
+- `/script` - Shell scripts and utilities ✅ (exists)
+- `/doc` - Generated documentation (rustdoc output)
+- `/example` - Example code and usage patterns
+- `/benchmark` - Performance benchmarking code
+
+But always discuss with the team before creating new top-level directories.
+
+---
+
+**Last Updated**: 2025-10-22
+**Enforced By**: Cursor AI, Code Reviews, CI/CD
+
 # Base Project Rules
 
 ## Directory Structure
