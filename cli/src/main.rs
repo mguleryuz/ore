@@ -260,6 +260,19 @@ async fn deploy(
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
     let square_id = std::env::var("SQUARE").expect("Missing SQUARE env var");
     let square_id = u64::from_str(&square_id).expect("Invalid SQUARE");
+    
+    // Check balance before deploying
+    let balance = rpc.get_balance(&payer.pubkey()).await?;
+    let min_balance_needed = amount + 10_000 + 2_000_000 + 890_880; // deploy + checkpoint + fees + rent-exempt
+    
+    if balance < min_balance_needed {
+        eprintln!("❌ Insufficient balance");
+        eprintln!("   Current balance: {} SOL ({} lamports)", balance as f64 / 1_000_000_000.0, balance);
+        eprintln!("   Minimum needed: {} SOL ({} lamports)", min_balance_needed as f64 / 1_000_000_000.0, min_balance_needed);
+        eprintln!("   Deposit at least {} SOL to address: {}", (min_balance_needed - balance) as f64 / 1_000_000_000.0, payer.pubkey());
+        return Err(anyhow::anyhow!("Insufficient balance"));
+    }
+    
     let board = get_board(rpc).await?;
     let mut squares = [false; 25];
     squares[square_id as usize] = true;

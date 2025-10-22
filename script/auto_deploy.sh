@@ -105,12 +105,27 @@ fi
 # Randomly select N blocks from available blocks
 echo "🎲 Randomly selecting $BLOCKS_QUANTITY blocks..."
 
-# Shuffle available blocks and take first N
+# Use a cross-platform method to shuffle (works on macOS and Linux)
 SELECTED_BLOCKS=()
-SHUFFLED=($(for block in "${AVAILABLE_ARRAY[@]}"; do echo "$block"; done | shuf))
+# Create array of indices and shuffle them
+INDICES=()
+for ((i=0; i<${#AVAILABLE_ARRAY[@]}; i++)); do
+    INDICES+=($i)
+done
 
-for ((i=0; i<$BLOCKS_QUANTITY && i<${#SHUFFLED[@]}; i++)); do
-    SELECTED_BLOCKS+=("${SHUFFLED[$i]}")
+# Simple shuffle algorithm (Fisher-Yates)
+for ((i=${#INDICES[@]}-1; i>0; i--)); do
+    j=$((RANDOM % (i+1)))
+    # Swap
+    temp=${INDICES[i]}
+    INDICES[i]=${INDICES[j]}
+    INDICES[j]=$temp
+done
+
+# Select first N indices
+for ((i=0; i<$BLOCKS_QUANTITY && i<${#INDICES[@]}; i++)); do
+    idx=${INDICES[i]}
+    SELECTED_BLOCKS+=("${AVAILABLE_ARRAY[$idx]}")
 done
 
 # Sort selected blocks for nicer display
@@ -162,14 +177,18 @@ for block in "${SELECTED_BLOCKS[@]}"; do
         ((DEPLOYED_COUNT++))
     else
         echo "❌ Failed to deploy to block #$block"
-        echo "$OUTPUT" | grep -i "error" || true
+        # Show detailed error messages (filter out compile/build messages)
+        echo "$OUTPUT" | grep -v "Compiling\|Finished\|warning:" | grep -E "(❌|Error|error|Insufficient|balance|needed|Deposit)" || echo "$OUTPUT"
         ((FAILED_COUNT++))
     fi
     
     echo ""
     
     # Add delay between deployments to avoid rate limiting
-    if [ ! -z "$DEPLOYMENT_DELAY" ] && [ $DEPLOYMENT_DELAY -gt 0 ] && [ $block != "${SELECTED_BLOCKS[-1]}" ]; then
+    # Get last block in array using array length
+    LAST_BLOCK="${SELECTED_BLOCKS[$((${#SELECTED_BLOCKS[@]} - 1))]}"
+    
+    if [ ! -z "$DEPLOYMENT_DELAY" ] && [ $DEPLOYMENT_DELAY -gt 0 ] && [ "$block" != "$LAST_BLOCK" ]; then
         echo "⏳ Waiting ${DEPLOYMENT_DELAY}s before next deployment..."
         sleep $DEPLOYMENT_DELAY
         echo ""
