@@ -20,7 +20,7 @@ This directory contains automated scripts and tools for ORE mining block deploym
 
 ```bash
 # Install everything and setup environment
-make install
+make setup
 
 # Create and configure .env file
 make env

@@ -1,7 +1,7 @@
 # ORE Mining - Makefile
 # Easy commands to setup and deploy blocks
 
-.PHONY: help setup deploy build clean check-deps board miner treasury config round claim checkpoint reset test install env generate-keypair balance address test-e2e test-e2e-verbose test-e2e-mainnet ensure-setup check-python
+.PHONY: help setup deploy build clean check-deps board miner treasury config round claim checkpoint reset test env generate-keypair balance address test-e2e test-e2e-verbose test-e2e-mainnet ensure-setup check-python
 
 # Helper: Check if all dependencies are installed
 _check_deps = command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1 && command -v solana >/dev/null 2>&1 && command -v bc >/dev/null 2>&1 && command -v pkg-config >/dev/null 2>&1 && [ -f .env ] && [ -f ./tmp/keypair.json ]
@@ -334,11 +334,6 @@ check-solana:
 # Catch-all rule for generate-keypair arguments (prevents "No rule to make target" errors)
 %:
 	@:
-
-# All-in-one: setup, build, and show help
-install: setup build
-	@echo ""
-	@echo "✅ Installation complete! Run 'make help' to see available commands."
 
 # Quick start guide
 quickstart:

@@ -2,6 +2,34 @@
 
 ORE is a crypto mining protocol.
 
+## Prerequisites
+
+This project uses `make` for build automation. Install it for your platform:
+
+**macOS:**
+
+```bash
+xcode-select --install
+```
+
+**Linux (Debian/Ubuntu):**
+
+```bash
+sudo apt-get update
+sudo apt-get install build-essential
+```
+
+**Linux (Fedora/RHEL):**
+
+```bash
+sudo dnf install make
+```
+
+**Windows:**
+
+- Install via [Chocolatey](https://chocolatey.org/): `choco install make`
+- Or use [WSL](https://docs.microsoft.com/en-us/windows/wsl/) and follow Linux instructions
+
 ## 📚 Documentation
 
 - **[Quick Start Guide](spec/QUICKSTART.md)** - Get started with ORE mining

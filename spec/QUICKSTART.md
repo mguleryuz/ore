@@ -1,9 +1,10 @@
 # ORE Mining - Quick Start Guide
 
-This guide will help you set up and run the ORE mining block selection scripts.
+This guide will help you set up and run the ORE mining deployment with automatic block selection.
 
 ## 📋 Prerequisites
 
+- `make` command-line tool installed (see [README.md](../README.md#prerequisites) for installation)
 - A Solana wallet keypair
 - SOL in your wallet for deployments
 - Internet connection
@@ -21,6 +22,7 @@ make setup
 ```
 
 This script will automatically:
+
 - ✅ Detect your operating system (macOS or Linux)
 - ✅ Install Rust and Cargo (if not present)
 - ✅ Install Solana CLI tools (if not present)
@@ -70,6 +72,7 @@ make deploy
 ```
 
 The script will:
+
 - ✅ Validate your configuration
 - ✅ Fetch available blocks from mainnet
 - ✅ Randomly select N blocks from available ones
@@ -102,24 +105,28 @@ The board has 25 squares numbered 0-24 (5x5 grid):
 ### Example Configurations
 
 **Deploy to 3 random available blocks:**
+
 ```bash
 BLOCKS_QUANTITY=3
 BET_AMOUNT=0.01
 ```
 
 **Deploy to 10 random available blocks:**
+
 ```bash
 BLOCKS_QUANTITY=10
 BET_AMOUNT=0.05
 ```
 
 **Deploy to a single random block:**
+
 ```bash
 BLOCKS_QUANTITY=1
 BET_AMOUNT=0.1
 ```
 
 **Deploy to all available blocks:**
+
 ```bash
 BLOCKS_QUANTITY=25
 BET_AMOUNT=0.01
@@ -132,6 +139,7 @@ BET_AMOUNT=0.01
 ### Dependencies Not Found
 
 If you get dependency errors, run:
+
 ```bash
 make setup
 # or
@@ -147,6 +155,7 @@ make setup
 ### Wallet Issues
 
 Generate a new Solana wallet if needed:
+
 ```bash
 make generate-keypair
 # or
@@ -156,6 +165,7 @@ solana-keygen new
 ### Permission Denied
 
 Make sure scripts are executable:
+
 ```bash
 chmod +x script/setup.sh script/auto_deploy.sh
 ```
@@ -163,6 +173,7 @@ chmod +x script/setup.sh script/auto_deploy.sh
 ### Build Failures
 
 Clean and rebuild:
+
 ```bash
 cargo clean
 cargo build --release
@@ -185,11 +196,13 @@ RPC_URL=https://solana-mainnet.g.alchemy.com/v2/your-api-key
 ### Different Networks
 
 **Devnet (for testing):**
+
 ```bash
 RPC_URL=https://api.devnet.solana.com
 ```
 
 **Mainnet:**
+
 ```bash
 RPC_URL=https://api.mainnet-beta.solana.com
 ```
@@ -283,4 +296,3 @@ If you encounter issues:
 ---
 
 Good luck with your ORE mining! 🎲⛏️
-

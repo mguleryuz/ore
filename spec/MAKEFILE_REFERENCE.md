@@ -6,82 +6,81 @@ This document provides a comprehensive guide to all available `make` commands fo
 
 ```bash
 # First time setup
-make install        # or make setup
+make setup
 
 # Configure your environment
 make env            # Create .env file
 nano .env           # Edit with your settings
 
 # Deploy to blocks
-make deploy         # Run block selection script
+make deploy         # Auto-select and deploy to randomly selected available blocks
 ```
 
 ## 📋 All Available Commands
 
 ### Setup & Configuration
 
-| Command | Description |
-|---------|-------------|
-| `make help` | Show all available commands (default) |
-| `make setup` | Install all dependencies and setup environment |
-| `make env` | Create `.env` file from `.env.example` |
-| `make check-deps` | Check if all dependencies are installed |
-| `make install` | Complete installation (setup + build) |
+| Command           | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `make help`       | Show all available commands (default)          |
+| `make setup`      | Install all dependencies and setup environment |
+| `make env`        | Create `.env` file from `.env.example`         |
+| `make check-deps` | Check if all dependencies are installed        |
 
 ### Building & Testing
 
-| Command | Description |
-|---------|-------------|
-| `make build` | Build the project in release mode |
-| `make build-debug` | Build the project in debug mode |
-| `make clean` | Clean build artifacts |
-| `make test` | Run Solana BPF tests |
-| `make fmt` | Format code with rustfmt |
-| `make fmt-check` | Check code formatting |
-| `make lint` | Run clippy linter |
-| `make update` | Update dependencies |
+| Command            | Description                       |
+| ------------------ | --------------------------------- |
+| `make build`       | Build the project in release mode |
+| `make build-debug` | Build the project in debug mode   |
+| `make clean`       | Clean build artifacts             |
+| `make test`        | Run Solana BPF tests              |
+| `make fmt`         | Format code with rustfmt          |
+| `make fmt-check`   | Check code formatting             |
+| `make lint`        | Run clippy linter                 |
+| `make update`      | Update dependencies               |
 
 ### Deployment
 
-| Command | Description |
-|---------|-------------|
+| Command       | Description                                       |
+| ------------- | ------------------------------------------------- |
 | `make deploy` | Auto-deploy to randomly selected available blocks |
 
 ### Query Commands
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `make board` | Show current board state | `make board` |
-| `make miner` | Show your miner information | `make miner` |
-| `make treasury` | Show treasury information | `make treasury` |
-| `make config` | Show config information | `make config` |
-| `make clock` | Show current clock/slot info | `make clock` |
-| `make stake` | Show stake information | `make stake` |
-| `make round` | Show specific round info | `make round ID=123` |
+| Command         | Description                  | Example             |
+| --------------- | ---------------------------- | ------------------- |
+| `make board`    | Show current board state     | `make board`        |
+| `make miner`    | Show your miner information  | `make miner`        |
+| `make treasury` | Show treasury information    | `make treasury`     |
+| `make config`   | Show config information      | `make config`       |
+| `make clock`    | Show current clock/slot info | `make clock`        |
+| `make stake`    | Show stake information       | `make stake`        |
+| `make round`    | Show specific round info     | `make round ID=123` |
 
 ### Transaction Commands
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `make claim` | Claim mining rewards (SOL + ORE) | `make claim` |
-| `make checkpoint` | Checkpoint a miner | `make checkpoint AUTHORITY=<pubkey>` |
-| `make checkpoint-all` | Checkpoint all miners | `make checkpoint-all` |
-| `make reset` | Reset the board for a new round | `make reset` |
+| Command               | Description                      | Example                              |
+| --------------------- | -------------------------------- | ------------------------------------ |
+| `make claim`          | Claim mining rewards (SOL + ORE) | `make claim`                         |
+| `make checkpoint`     | Checkpoint a miner               | `make checkpoint AUTHORITY=<pubkey>` |
+| `make checkpoint-all` | Checkpoint all miners            | `make checkpoint-all`                |
+| `make reset`          | Reset the board for a new round  | `make reset`                         |
 
 ### Wallet Commands
 
-| Command | Description |
-|---------|-------------|
+| Command        | Description         |
+| -------------- | ------------------- |
 | `make balance` | Show wallet balance |
 | `make address` | Show wallet address |
 
 ### Utilities
 
-| Command | Description |
-|---------|-------------|
-| `make install-solana` | Install Solana CLI only |
-| `make install-rust` | Install Rust only |
-| `make quickstart` | Display the quick start guide |
+| Command               | Description                   |
+| --------------------- | ----------------------------- |
+| `make install-solana` | Install Solana CLI only       |
+| `make install-rust`   | Install Rust only             |
+| `make quickstart`     | Display the quick start guide |
 
 ## 📝 Detailed Examples
 
@@ -89,7 +88,7 @@ make deploy         # Run block selection script
 
 ```bash
 # 1. Install everything
-make install
+make setup
 
 # 2. Create and configure .env
 make env
@@ -229,16 +228,19 @@ DEPLOYMENT_DELAY=1
 Make is not installed. Install it:
 
 **macOS:**
+
 ```bash
 xcode-select --install
 ```
 
 **Linux (Ubuntu/Debian):**
+
 ```bash
 sudo apt-get install build-essential
 ```
 
 **Linux (Fedora):**
+
 ```bash
 sudo dnf install make
 ```
@@ -246,6 +248,7 @@ sudo dnf install make
 ### ".env file not found"
 
 Create the `.env` file:
+
 ```bash
 make env
 nano .env  # Edit with your settings
@@ -254,6 +257,7 @@ nano .env  # Edit with your settings
 ### "Dependencies not installed"
 
 Run setup:
+
 ```bash
 make setup
 ```
@@ -261,6 +265,7 @@ make setup
 ### Build errors
 
 Clean and rebuild:
+
 ```bash
 make clean
 make build
@@ -277,17 +282,20 @@ make build
 1. **Tab Completion**: Type `make ` and press TAB to see available commands (if your shell supports it)
 
 2. **Combine Commands**: You can chain commands with `&&`:
+
    ```bash
    make build && make deploy
    ```
 
 3. **Environment Variables**: Override `.env` values temporarily:
+
    ```bash
    BLOCKS_QUANTITY=10 make deploy
    BET_AMOUNT=0.05 make deploy
    ```
 
 4. **Silent Mode**: Add `-s` flag to suppress make output:
+
    ```bash
    make -s board
    ```
@@ -305,4 +313,3 @@ make build
 ---
 
 Happy mining! ⛏️✨
-

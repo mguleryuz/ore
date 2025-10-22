@@ -56,7 +56,7 @@ ore/
 │       └── wrap.rs
 │
 ├── script/               # Shell scripts and utilities
-│   ├── auto_deploy.sh    # Auto block selection & deployment
+│   ├── auto_deploy.sh    # Automated block selection & deployment
 │   ├── generate_keypair.sh # Secure keypair generation
 │   ├── localnet.sh       # Local network setup
 │   └── setup.sh          # Dependency setup
