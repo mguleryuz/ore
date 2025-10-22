@@ -5,8 +5,15 @@
 # Runs non-interactively and stores keypair in ./tmp/keypair.json
 #
 # Usage:
-#   ./script/generate_keypair.sh              # Generate new random keypair
-#   ./script/generate_keypair.sh "seedphrase" # Import from seedphrase
+#   ./script/generate_keypair.sh                                    # Generate new random keypair
+#   ./script/generate_keypair.sh "seed phrase words..."             # Import from BIP39 seedphrase (account 0)
+#   ./script/generate_keypair.sh "seed phrase words..." 1           # Import from BIP39 seedphrase (account 1)
+#   ./script/generate_keypair.sh "base58_private_key"               # Import from base58 private key
+#   ./script/generate_keypair.sh "[1,2,3,...]"                      # Import from JSON byte array
+#
+# Derivation Path:
+#   Uses Solana standard: m/44'/501'/account'/0'
+#   This matches web3.js derivePath behavior
 
 set -e
 
@@ -27,61 +34,189 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Default keypair path (project local)
 KEYPAIR_PATH="${PROJECT_ROOT}/tmp/keypair.json"
 
-# Get optional seedphrase argument
-SEEDPHRASE="${1:-}"
+# Get optional input argument (seedphrase or private key)
+INPUT="${1:-}"
+
+# Get optional account number (for BIP39 derivation path: m/44'/501'/account'/0')
+# Default to 0, matches the TypeScript: m/44'/501'/${accountNumber}'/0'
+ACCOUNT_NUMBER="${2:-0}"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║${NC}        Secure Solana Keypair Generator                    ${BLUE}║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Check if solana-keygen is installed
-if ! command -v solana-keygen &> /dev/null; then
-    echo -e "${RED}❌ Error: solana-keygen not found${NC}"
-    echo ""
-    echo "Solana CLI is required but not installed."
-    echo ""
-    echo "Please run setup first to install all dependencies:"
-    echo "  make setup"
-    echo ""
-    echo "Or install Solana CLI manually:"
-    echo "  sh -c \"\$(curl -sSfL https://release.solana.com/stable/install)\""
-    exit 1
-fi
+echo -e "${BLUE}📝 Keypair location: ${KEYPAIR_PATH}${NC}"
+echo ""
 
 # Create tmp directory if it doesn't exist
 mkdir -p "$(dirname "$KEYPAIR_PATH")"
 
-echo -e "${BLUE}📝 Keypair location: ${KEYPAIR_PATH}${NC}"
-echo ""
+# Function to detect input type
+detect_input_type() {
+    local input="$1"
+    
+    # Check if empty
+    if [ -z "$input" ]; then
+        echo "none"
+        return
+    fi
+    
+    # Check if it's a JSON byte array: starts with [ and ends with ]
+    if [[ "$input" =~ ^\[.*\]$ ]]; then
+        echo "json_array"
+        return
+    fi
+    
+    # Check if it's a base58 private key (typically 87-88 characters, alphanumeric)
+    # Solana private keys in base58 are usually 87-88 chars
+    if [[ "$input" =~ ^[1-9A-HJ-NP-Za-km-z]{87,88}$ ]]; then
+        echo "base58"
+        return
+    fi
+    
+    # Check if it looks like a seedphrase (multiple words separated by spaces)
+    # BIP39 seedphrases are typically 12 or 24 words
+    word_count=$(echo "$input" | wc -w | tr -d ' ')
+    if [ "$word_count" -eq 12 ] || [ "$word_count" -eq 24 ]; then
+        echo "seedphrase"
+        return
+    fi
+    
+    # If it has spaces and multiple words but not 12/24, still try as seedphrase
+    if [[ "$input" =~ [[:space:]] ]] && [ "$word_count" -gt 1 ]; then
+        echo "seedphrase"
+        return
+    fi
+    
+    # Default to unknown
+    echo "unknown"
+}
 
-# Check if seedphrase was provided
-if [ -n "$SEEDPHRASE" ]; then
-    echo -e "${BLUE}🔐 Importing keypair from seedphrase...${NC}"
-    echo ""
+# Detect input type
+INPUT_TYPE=$(detect_input_type "$INPUT")
+
+case "$INPUT_TYPE" in
+    none)
+        echo -e "${BLUE}🔐 Generating new random keypair...${NC}"
+        echo ""
+        
+        # Generate keypair (non-interactive, force overwrite, no passphrase)
+        solana-keygen new --outfile "$KEYPAIR_PATH" --no-bip39-passphrase --force 2>&1 | grep -v "wrote" || true
+        
+        echo ""
+        echo -e "${GREEN}✅ Keypair generated successfully!${NC}"
+        ;;
+        
+    seedphrase)
+        echo -e "${BLUE}🔐 Importing keypair from BIP39 seedphrase...${NC}"
+        echo -e "${YELLOW}   Detected: Seedphrase ($(echo "$INPUT" | wc -w | tr -d ' ') words)${NC}"
+        echo -e "${YELLOW}   Account: $ACCOUNT_NUMBER${NC}"
+        echo ""
+        
+        # Import from seedphrase using proper Solana derivation path: m/44'/501'/account'/0'
+        # This matches the TypeScript derivation: derivePath("m/44'/501'/${accountNumber}'/0'", seed)
+        echo "$INPUT" | solana-keygen recover --outfile "$KEYPAIR_PATH" --force --derivation-path "m/44'/501'/$ACCOUNT_NUMBER'/0'" 2>&1 | grep -v "wrote" || true
+        
+        echo ""
+        echo -e "${GREEN}✅ Keypair imported from seedphrase!${NC}"
+        ;;
+        
+    base58)
+        echo -e "${BLUE}🔐 Importing keypair from base58 private key...${NC}"
+        echo -e "${YELLOW}   Detected: Base58 encoded private key${NC}"
+        echo ""
+        
+        # Import base58 private key (keypair) directly
+        # Solana keypairs are 64 bytes (32 secret + 32 public) encoded in base58
+        python3 << PYTHON_SCRIPT
+import base58
+import json
+import sys
+import subprocess
+
+try:
+    key = "$INPUT"
+    decoded = base58.b58decode(key)
     
-    # Import from seedphrase (will overwrite existing)
-    echo "$SEEDPHRASE" | solana-keygen recover --outfile "$KEYPAIR_PATH" --force 2>&1 | grep -v "wrote" || true
+    # Should be 64 bytes (full keypair)
+    if len(decoded) != 64:
+        print(f"Error: Expected 64 bytes, got {len(decoded)}", file=sys.stderr)
+        sys.exit(1)
     
-    echo ""
-    echo -e "${GREEN}✅ Keypair imported successfully!${NC}"
-    echo ""
-else
-    echo -e "${BLUE}🔐 Generating new keypair...${NC}"
-    echo ""
+    key_array = list(decoded)
     
-    # Generate keypair (non-interactive, force overwrite, no passphrase)
-    solana-keygen new --outfile "$KEYPAIR_PATH" --no-bip39-passphrase --force 2>&1 | grep -v "wrote" || true
+    # Write to keypair file
+    with open("$KEYPAIR_PATH", 'w') as f:
+        json.dump(key_array, f)
     
-    echo ""
-    echo -e "${GREEN}✅ Keypair generated successfully!${NC}"
-    echo ""
-fi
+    # Verify by getting the public key
+    try:
+        result = subprocess.run(['solana-keygen', 'pubkey', '$KEYPAIR_PATH'], 
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            pubkey = result.stdout.strip()
+            print(f"Keypair imported successfully")
+            print(f"Public Key: {pubkey}")
+        else:
+            print(f"Warning: Could not verify keypair", file=sys.stderr)
+    except Exception as e:
+        print(f"Warning: {e}", file=sys.stderr)
+        
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+PYTHON_SCRIPT
+        
+        echo ""
+        echo -e "${GREEN}✅ Keypair imported from base58 private key!${NC}"
+        ;;
+        
+    json_array)
+        echo -e "${BLUE}🔐 Importing keypair from JSON byte array...${NC}"
+        echo -e "${YELLOW}   Detected: JSON array format${NC}"
+        echo ""
+        
+        # Write JSON array directly to file
+        echo "$INPUT" > "$KEYPAIR_PATH"
+        
+        # Verify it's a valid keypair
+        if solana-keygen pubkey "$KEYPAIR_PATH" &> /dev/null; then
+            echo -e "${GREEN}✅ Keypair imported from JSON array!${NC}"
+        else
+            echo -e "${RED}❌ Error: Invalid JSON array format${NC}"
+            echo "   Expected format: [num1,num2,num3,...] with 64 bytes"
+            rm -f "$KEYPAIR_PATH"
+            exit 1
+        fi
+        ;;
+        
+    unknown)
+        echo -e "${RED}❌ Error: Could not detect input type${NC}"
+        echo ""
+        echo "Supported formats:"
+        echo "  • BIP39 Seedphrase: 12 or 24 words separated by spaces"
+        echo "  • Base58 Private Key: 87-88 character alphanumeric string"
+        echo "  • JSON Byte Array: [1,2,3,...] with 64 bytes"
+        echo ""
+        echo "Examples:"
+        echo "  ./script/generate_keypair.sh \"word1 word2 word3...\""
+        echo "  ./script/generate_keypair.sh \"5J3mBbAH58CpQ3Y5RNJpUKPE62SQ5tfcvU2JpbnkeyhfsYB1Jcn\""
+        echo "  ./script/generate_keypair.sh '[1,2,3,4,...]'"
+        exit 1
+        ;;
+esac
 
 # Display public key
-PUBKEY=$(solana-keygen pubkey "$KEYPAIR_PATH" 2>/dev/null)
-echo -e "${GREEN}🔑 Public Key: ${PUBKEY}${NC}"
-echo ""
+if [ -f "$KEYPAIR_PATH" ]; then
+    PUBKEY=$(solana-keygen pubkey "$KEYPAIR_PATH" 2>/dev/null)
+    echo ""
+    echo -e "${GREEN}🔑 Public Key: ${PUBKEY}${NC}"
+    echo ""
+else
+    echo -e "${RED}❌ Error: Keypair file was not created${NC}"
+    exit 1
+fi
 
 # Security warnings
 echo -e "${YELLOW}⚠️  SECURITY WARNINGS:${NC}"
@@ -121,4 +256,3 @@ echo ""
 
 # Re-enable history for next commands
 export HISTFILE="$HOME/.zsh_history"
-

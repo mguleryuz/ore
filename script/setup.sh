@@ -274,6 +274,78 @@ install_openssl() {
     fi
 }
 
+# Install Python3 (needed for generate_keypair.sh)
+install_python3() {
+    if command_exists python3; then
+        PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+        print_success "Python3 is already installed (version: $PYTHON_VERSION)"
+        return 0
+    fi
+
+    print_warning "Python3 is not installed. Installing..."
+    
+    if [ "$OS" = "macos" ]; then
+        if command_exists brew; then
+            brew install python3
+        else
+            print_error "Homebrew is required but not installed. Please install from https://brew.sh/"
+            exit 1
+        fi
+    elif [ "$OS" = "linux" ]; then
+        if command_exists apt-get; then
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
+        elif command_exists yum; then
+            sudo yum install -y python3 python3-pip
+        elif command_exists dnf; then
+            sudo dnf install -y python3 python3-pip
+        elif command_exists pacman; then
+            sudo pacman -S --noconfirm python3
+        else
+            print_error "Could not determine package manager. Please install 'python3' manually."
+            exit 1
+        fi
+    fi
+    
+    if command_exists python3; then
+        print_success "Python3 installed successfully"
+    else
+        print_error "Failed to install Python3"
+        exit 1
+    fi
+}
+
+# Install base58 Python library (needed for generate_keypair.sh to import base58 private keys)
+install_base58() {
+    if command_exists python3; then
+        if python3 -c "import base58" 2>/dev/null; then
+            print_success "Python base58 library is already installed"
+            return 0
+        fi
+    fi
+
+    print_warning "Installing Python base58 library (for private key import)..."
+    
+    if command_exists pip3; then
+        pip3 install --quiet base58
+    elif command_exists pip; then
+        pip install --quiet base58
+    elif command_exists python3; then
+        python3 -m pip install --quiet base58
+    else
+        print_warning "Could not install base58 library automatically"
+        print_info "Try installing manually:"
+        echo "  pip3 install base58"
+        return 1
+    fi
+    
+    if python3 -c "import base58" 2>/dev/null; then
+        print_success "base58 library installed successfully"
+    else
+        print_warning "base58 library installation may have failed"
+    fi
+}
+
 # Check for Homebrew on macOS
 check_homebrew() {
     if [ "$OS" = "macos" ]; then
@@ -395,6 +467,12 @@ main() {
     echo ""
     
     install_openssl
+    echo ""
+    
+    install_python3
+    echo ""
+    
+    install_base58
     echo ""
     
     # Setup environment

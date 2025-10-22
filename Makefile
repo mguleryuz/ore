@@ -1,10 +1,36 @@
 # ORE Mining - Makefile
 # Easy commands to setup and deploy blocks
 
-.PHONY: help setup deploy build clean check-deps board miner treasury config round claim checkpoint reset test install env generate-keypair balance address test-e2e test-e2e-verbose test-e2e-mainnet ensure-setup
+.PHONY: help setup deploy build clean check-deps board miner treasury config round claim checkpoint reset test install env generate-keypair balance address test-e2e test-e2e-verbose test-e2e-mainnet ensure-setup check-python
 
 # Helper: Check if all dependencies are installed
 _check_deps = command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1 && command -v solana >/dev/null 2>&1 && command -v bc >/dev/null 2>&1 && command -v pkg-config >/dev/null 2>&1 && [ -f .env ] && [ -f ./tmp/keypair.json ]
+
+# Helper: Check if a command exists
+_command_exists = command -v $(1) >/dev/null 2>&1
+
+# Helper: Check Python and base58 dependencies
+_check_python_deps = command -v python3 >/dev/null 2>&1 && python3 -c "import base58" >/dev/null 2>&1
+
+# Helper: Ensure Python dependencies are available
+check-python: check-solana
+	@if ! command -v python3 >/dev/null 2>&1; then \
+		echo "❌ Error: Python3 not found"; \
+		echo ""; \
+		echo "Run setup to install all dependencies:"; \
+		echo "  make setup"; \
+		exit 1; \
+	fi
+	@if ! python3 -c "import base58" >/dev/null 2>&1; then \
+		echo "❌ Error: Python base58 library not installed"; \
+		echo ""; \
+		echo "Install with:"; \
+		echo "  pip3 install base58"; \
+		echo ""; \
+		echo "Or run setup:"; \
+		echo "  make setup"; \
+		exit 1; \
+	fi
 
 # Helper: Ensure all dependencies are installed before running commands
 ensure-setup:
@@ -50,15 +76,19 @@ help:
 	@echo "  make test-e2e-mainnet - Query mainnet for testing"
 	@echo ""
 	@echo "Wallet Management:"
-	@echo "  make generate-keypair - Generate new keypair (secure)"
-	@echo "  make balance        - Show wallet balance"
-	@echo "  make address        - Show wallet address"
+	@echo "  make generate-keypair              - Generate new keypair (secure)"
+	@echo "  make balance                       - Show wallet balance"
+	@echo "  make address                       - Show wallet address"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make setup                    - First time setup"
-	@echo "  make deploy                   - Deploy with .env config"
-	@echo "  make round ID=123             - Show round 123 info"
-	@echo "  make checkpoint AUTHORITY=... - Checkpoint specific miner"
+	@echo "  make setup                                          - First time setup"
+	@echo "  make deploy                                         - Deploy with .env config"
+	@echo "  make generate-keypair                               - Generate new random keypair"
+	@echo "  make generate-keypair base58_key                    - Import from base58 key"
+	@echo "  make generate-keypair KEY=\"seedphrase words...\"    - Import from seedphrase (account 0)"
+	@echo "  make generate-keypair KEY=\"seedphrase...\" ACCOUNT=1 - Import seedphrase account 1"
+	@echo "  make round ID=123                             - Show round 123 info"
+	@echo "  make checkpoint AUTHORITY=...                 - Checkpoint specific miner"
 	@echo ""
 
 # Setup - Install all dependencies
@@ -270,10 +300,26 @@ address: ensure-setup
 		solana address --keypair $$PRIVATE_KEY_PATH
 
 # Generate new keypair (secure, no history)
-generate-keypair: check-solana
-	@echo "🔐 Generating new Solana keypair..."
+# Usage: make generate-keypair KEY="..." ACCOUNT=N
+# Or: make generate-keypair [simple_arg]
+# Examples: 
+#   make generate-keypair                        - Generate random keypair
+#   make generate-keypair KEY="seedphrase"       - Import seedphrase (account 0)
+#   make generate-keypair KEY="seedphrase" ACCOUNT=1 - Import seedphrase account 1
+#   make generate-keypair base58_key             - Import base58 key
+generate-keypair: check-python
+	@echo "🔐 Generating Solana keypair..."
 	@chmod +x script/generate_keypair.sh
-	@./script/generate_keypair.sh
+	@if [ -n "$(KEY)" ]; then \
+		./script/generate_keypair.sh "$(KEY)" "$(ACCOUNT)"; \
+	else \
+		FIRST_ARG="$(wordlist 2,2,$(MAKECMDGOALS))"; \
+		if [ -n "$$FIRST_ARG" ]; then \
+			./script/generate_keypair.sh "$$FIRST_ARG" "$(wordlist 3,3,$(MAKECMDGOALS))"; \
+		else \
+			./script/generate_keypair.sh; \
+		fi; \
+	fi
 
 # Check if Solana CLI is installed
 check-solana:
@@ -284,6 +330,10 @@ check-solana:
 		echo "  make setup"; \
 		exit 1; \
 	fi
+
+# Catch-all rule for generate-keypair arguments (prevents "No rule to make target" errors)
+%:
+	@:
 
 # All-in-one: setup, build, and show help
 install: setup build
